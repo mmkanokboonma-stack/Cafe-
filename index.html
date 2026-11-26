@@ -671,14 +671,16 @@
         // สร้างและเก็บ ID ประจำเครื่อง/เซสชันของลูกค้าแต่ละคน เพื่อไม่ให้เห็นออเดอร์ของลูกค้าคนก่อนหน้า
         const CUSTOMER_SESSION_KEY = 'baansuan_customer_session_id';
         const CUSTOMER_OWN_ORDERS_KEY = 'baansuan_customer_own_order_ids';
-        let customerSessionId = localStorage.getItem(CUSTOMER_SESSION_KEY);
+        let customerSessionId = sessionStorage.getItem(CUSTOMER_SESSION_KEY);
         if (!customerSessionId) {
             customerSessionId = 'cust_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-            localStorage.setItem(CUSTOMER_SESSION_KEY, customerSessionId);
+            sessionStorage.setItem(CUSTOMER_SESSION_KEY, customerSessionId);
+            // ล้างรายการบิลเก่าเมื่อสแกน QR Code หรือเปิดหน้าสั่งอาหารรอบใหม่
+            sessionStorage.removeItem(CUSTOMER_OWN_ORDERS_KEY);
         }
         let customerOwnOrderIds = [];
         try {
-            customerOwnOrderIds = JSON.parse(localStorage.getItem(CUSTOMER_OWN_ORDERS_KEY) || '[]');
+            customerOwnOrderIds = JSON.parse(sessionStorage.getItem(CUSTOMER_OWN_ORDERS_KEY) || '[]');
         } catch (e) {
             customerOwnOrderIds = [];
         }
@@ -687,11 +689,10 @@
             if (!orderId) return;
             if (!customerOwnOrderIds.includes(orderId)) {
                 customerOwnOrderIds.push(orderId);
-                // เก็บประวัติล่าสุด 50 บิลของเครื่องนี้
-                if (customerOwnOrderIds.length > 50) {
-                    customerOwnOrderIds = customerOwnOrderIds.slice(-50);
+                if (customerOwnOrderIds.length > 20) {
+                    customerOwnOrderIds = customerOwnOrderIds.slice(-20);
                 }
-                localStorage.setItem(CUSTOMER_OWN_ORDERS_KEY, JSON.stringify(customerOwnOrderIds));
+                sessionStorage.setItem(CUSTOMER_OWN_ORDERS_KEY, JSON.stringify(customerOwnOrderIds));
             }
         }
 
@@ -1348,13 +1349,16 @@
         function renderCustomerActiveOrders() {
             const section = document.getElementById('customer-active-orders');
             const list = document.getElementById('customer-orders-list');
-            const todayStr = getLocalDateString(Date.now());
-            // แสดงเฉพาะออเดอร์ของวันนี้ โต๊ะนี้ และที่ถูกสั่งจากเครื่อง/เซสชันของลูกค้าคนนี้เท่านั้น
-            const tableOrders = orders.filter(o =>
-                getLocalDateString(o.createdAt || Date.now()) === todayStr &&
-                o.table === currentTable &&
-                (o.customerSessionId === customerSessionId || customerOwnOrderIds.includes(o.id))
-            );
+            const now = Date.now();
+            const todayStr = getLocalDateString(now);
+            // แสดงเฉพาะออเดอร์ของรอบการสแกนนี้ และซ่อนออเดอร์เก่าที่เสิร์ฟเสร็จไปแล้วเกิน 10 นาที
+            const tableOrders = orders.filter(o => {
+                const isToday = getLocalDateString(o.createdAt || now) === todayStr;
+                const isSameTable = o.table === currentTable;
+                const isThisSessionOrder = o.customerSessionId === customerSessionId || customerOwnOrderIds.includes(o.id);
+                const isStillActiveOrRecent = o.status !== 'completed' || (now - (o.createdAt || 0) <= 10 * 60 * 1000);
+                return isToday && isSameTable && isThisSessionOrder && isStillActiveOrRecent;
+            });
 
             if (tableOrders.length === 0) {
                 section.classList.add('hidden');
