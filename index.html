@@ -103,22 +103,50 @@
         </div>
 
         <!-- หมวดหมู่เมนูและช่องค้นหา -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
-            <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                <button onclick="filterCategory('all')" id="cat-all" class="cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-stone-900 text-white shadow-sm transition">
-                    ทั้งหมด
-                </button>
-                <button onclick="filterCategory('coffee')" id="cat-coffee" class="cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-white text-stone-700 hover:bg-stone-100 border border-stone-200 transition flex items-center gap-1.5">
-                    <i data-lucide="cup-soda" class="w-4 h-4 text-amber-600"></i> เครื่องดื่ม & กาแฟ
-                </button>
-                <button onclick="filterCategory('pizza')" id="cat-pizza" class="cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-white text-stone-700 hover:bg-stone-100 border border-stone-200 transition flex items-center gap-1.5">
-                    <i data-lucide="pizza" class="w-4 h-4 text-orange-600"></i> พิซซ่า & ของทานเล่น
-                </button>
+        <div class="flex flex-col gap-3 mb-6">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                    <button onclick="filterCategory('all')" id="cat-all" class="cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-stone-900 text-white shadow-sm transition">
+                        ทั้งหมด
+                    </button>
+                    <button onclick="filterCategory('coffee')" id="cat-coffee" class="cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-white text-stone-700 hover:bg-stone-100 border border-stone-200 transition flex items-center gap-1.5">
+                        <i data-lucide="cup-soda" class="w-4 h-4 text-amber-600"></i> เครื่องดื่ม & กาแฟ
+                    </button>
+                    <button onclick="filterCategory('pizza')" id="cat-pizza" class="cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-white text-stone-700 hover:bg-stone-100 border border-stone-200 transition flex items-center gap-1.5">
+                        <i data-lucide="pizza" class="w-4 h-4 text-orange-600"></i> พิซซ่า & ของทานเล่น
+                    </button>
+                </div>
+
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" id="customer-search" oninput="renderCustomerMenu()" placeholder="ค้นหาเมนู..." class="w-full sm:w-64 pl-10 pr-4 py-2 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                </div>
             </div>
 
-            <div class="relative">
-                <i data-lucide="search" class="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-                <input type="text" id="customer-search" oninput="renderCustomerMenu()" placeholder="ค้นหาเมนู..." class="w-full sm:w-64 pl-10 pr-4 py-2 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+            <!-- แถบหมวดหมู่ย่อยสำหรับเครื่องดื่ม & กาแฟ -->
+            <div id="customer-subcat-bar" class="hidden flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                <span class="text-xs font-semibold text-stone-500 whitespace-nowrap mr-1">หมวดย่อย:</span>
+                <button onclick="filterSubCategory('all')" id="subcat-all" class="subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-amber-600 text-white shadow-sm transition">
+                    ทั้งหมด
+                </button>
+                <button onclick="filterSubCategory('กาแฟ')" id="subcat-กาแฟ" class="subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-white text-stone-700 hover:bg-amber-50 border border-stone-200 transition">
+                    กาแฟ
+                </button>
+                <button onclick="filterSubCategory('ชา-นม')" id="subcat-ชา-นม" class="subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-white text-stone-700 hover:bg-amber-50 border border-stone-200 transition">
+                    ชา-นม
+                </button>
+                <button onclick="filterSubCategory('นมหมี')" id="subcat-นมหมี" class="subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-white text-stone-700 hover:bg-amber-50 border border-stone-200 transition">
+                    นมหมี
+                </button>
+                <button onclick="filterSubCategory('ชา-น้ำผลไม้')" id="subcat-ชา-น้ำผลไม้" class="subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-white text-stone-700 hover:bg-amber-50 border border-stone-200 transition">
+                    ชา-น้ำผลไม้
+                </button>
+                <button onclick="filterSubCategory('โซดา')" id="subcat-โซดา" class="subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-white text-stone-700 hover:bg-amber-50 border border-stone-200 transition">
+                    โซดา
+                </button>
+                <button onclick="filterSubCategory('เฉาก๊วย')" id="subcat-เฉาก๊วย" class="subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-white text-stone-700 hover:bg-amber-50 border border-stone-200 transition">
+                    เฉาก๊วย
+                </button>
             </div>
         </div>
 
@@ -256,75 +284,95 @@
         </section>
 
         <!-- แท็บย่อย 2.2: เพิ่มเมนูใหม่พร้อมรูปภาพและราคา -->
-        <section id="merchant-section-menu" class="hidden">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                <!-- ฟอร์มเพิ่มเมนูใหม่ (อยู่ด้านซ้าย 5 ส่วน) -->
-                <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
-                    <h3 class="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
-                        <i data-lucide="plus-square" class="w-5 h-5 text-amber-600"></i>
-                        เพิ่มเมนูใหม่เข้าร้าน
-                    </h3>
-                    <form id="add-menu-form" onsubmit="handleAddMenu(event)" class="space-y-4">
+        <section id="merchant-section-menu" class="hidden space-y-6">
+            <!-- ฟอร์มเพิ่มเมนูใหม่ (อยู่ด้านบน เต็มความกว้าง) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <div>
-                            <label class="block text-sm font-medium text-stone-700 mb-1">ชื่อเมนู *</label>
-                            <input type="text" id="menu-name" required placeholder="เช่น ลาเต้เย็น, พิซซ่าฮาวายเอี้ยน" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                            <label class="block text-sm font-medium text-stone-700 mb-1">หมวดหมู่หลัก *</label>
+                            <select id="menu-category" onchange="toggleAddMenuSubcategory()" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600 bg-white">
+                                <option value="coffee">เครื่องดื่ม & กาแฟ</option>
+                                <option value="pizza">พิซซ่า & ของทานเล่น</option>
+                            </select>
                         </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div>
-                                <label class="block text-sm font-medium text-stone-700 mb-1">หมวดหมู่ *</label>
-                                <select id="menu-category" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600 bg-white">
-                                    <option value="coffee">เครื่องดื่ม & กาแฟ</option>
-                                    <option value="pizza">พิซซ่า & ของทานเล่น</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-stone-700 mb-1">ราคาขาย (บาท) *</label>
-                                <input type="number" id="menu-price" required min="1" placeholder="85" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-stone-700 mb-1">ต้นทุน/ชิ้น (บาท)</label>
-                                <input type="number" id="menu-cost" min="0" step="0.01" placeholder="35" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
-                            </div>
+                        <div id="add-menu-subcat-wrapper">
+                            <label class="block text-sm font-medium text-stone-700 mb-1">หมวดย่อยเครื่องดื่ม *</label>
+                            <select id="menu-subcategory" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600 bg-white">
+                                <option value="กาแฟ">กาแฟ</option>
+                                <option value="ชา-นม">ชา-นม</option>
+                                <option value="นมหมี">นมหมี</option>
+                                <option value="ชา-น้ำผลไม้">ชา-น้ำผลไม้</option>
+                                <option value="โซดา">โซดา</option>
+                                <option value="เฉาก๊วย">เฉาก๊วย</option>
+                            </select>
                         </div>
-
                         <div>
-                            <label class="block text-sm font-medium text-stone-700 mb-1">คำอธิบายสั้นๆ</label>
-                            <input type="text" id="menu-desc" placeholder="เช่น เมล็ดกาแฟคั่วกลาง หอมนุ่มละมุน" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                            <label class="block text-sm font-medium text-stone-700 mb-1">ราคาขาย (บาท) *</label>
+                            <input type="number" id="menu-price" required min="1" placeholder="85" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-stone-700 mb-1">ต้นทุน/ชิ้น (บาท)</label>
+                            <input type="number" id="menu-cost" min="0" step="0.01" placeholder="35" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                        </div>
+                    </div>
 
-                        <!-- อัปโหลดรูปภาพหรือใส่ URL -->
-                        <div class="space-y-2">
-                            <label class="block text-sm font-medium text-stone-700">รูปภาพเมนู</label>
-                            <div class="border-2 border-dashed border-stone-300 rounded-xl p-4 text-center hover:bg-stone-50 transition cursor-pointer relative" onclick="document.getElementById('menu-image-file').click()">
-                                <input type="file" id="menu-image-file" accept="image/*" class="hidden" onchange="previewImageUpload(event)">
-                                <div id="image-preview-placeholder" class="space-y-1">
-                                    <i data-lucide="image-plus" class="w-8 h-8 text-stone-400 mx-auto"></i>
-                                    <p class="text-xs text-stone-600 font-medium">คลิกเพื่อเลือกรูปภาพจากเครื่อง</p>
-                                    <p class="text-[11px] text-stone-400">รองรับไฟล์ JPG, PNG (ย่อขนาดอัตโนมัติ)</p>
-                                </div>
-                                <img id="image-preview-img" class="hidden w-full h-40 object-cover rounded-lg mx-auto" alt="Preview">
+                    <div>
+                        <label class="block text-sm font-medium text-stone-700 mb-1">คำอธิบายสั้นๆ</label>
+                        <input type="text" id="menu-desc" placeholder="เช่น เมล็ดกาแฟคั่วกลาง หอมนุ่มละมุน" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                    </div>
+
+                    <!-- อัปโหลดรูปภาพหรือใส่ URL -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-stone-700">รูปภาพเมนู</label>
+                        <div class="border-2 border-dashed border-stone-300 rounded-xl p-4 text-center hover:bg-stone-50 transition cursor-pointer relative" onclick="document.getElementById('menu-image-file').click()">
+                            <input type="file" id="menu-image-file" accept="image/*" class="hidden" onchange="previewImageUpload(event)">
+                            <div id="image-preview-placeholder" class="space-y-1">
+                                <i data-lucide="image-plus" class="w-8 h-8 text-stone-400 mx-auto"></i>
+                                <p class="text-xs text-stone-600 font-medium">คลิกเพื่อเลือกรูปภาพจากเครื่อง</p>
+                                <p class="text-[11px] text-stone-400">รองรับไฟล์ JPG, PNG (ย่อขนาดอัตโนมัติ)</p>
                             </div>
-                            <div class="text-center text-xs text-stone-400">หรือวางลิงก์รูปภาพ (Image URL)</div>
-                            <input type="url" id="menu-image-url" oninput="previewImageUrl(this.value)" placeholder="https://example.com/pizza.jpg" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-xs focus:outline-none focus:border-amber-600">
+                            <img id="image-preview-img" class="hidden w-full h-40 object-cover rounded-lg mx-auto" alt="Preview">
                         </div>
+                        <div class="text-center text-xs text-stone-400">หรือวางลิงก์รูปภาพ (Image URL)</div>
+                        <input type="url" id="menu-image-url" oninput="previewImageUrl(this.value)" placeholder="https://example.com/pizza.jpg" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-xs focus:outline-none focus:border-amber-600">
+                    </div>
 
-                        <button type="submit" class="w-full bg-stone-900 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2">
-                            <i data-lucide="save" class="w-4 h-4"></i>
-                            <span>บันทึกเมนูใหม่</span>
-                        </button>
-                    </form>
-                </div>
+                    <button type="submit" class="w-full bg-stone-900 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>บันทึกเมนูใหม่</span>
+                    </button>
+                </form>
+            </div>
 
-                <!-- รายการเมนูทั้งหมดในร้าน (อยู่ด้านขวา 7 ส่วน เรียงลงมาดูง่าย) -->
-                <div class="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
-                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-stone-100">
+            <!-- รายการเมนูทั้งหมดในร้าน (อยู่ด้านล่าง เต็มความกว้าง เรียงลงมาดูง่าย) -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 pb-4 border-b border-stone-100">
+                    <div>
                         <h3 class="text-lg font-bold text-stone-900">รายการเมนูทั้งหมดในร้าน (<span id="merchant-menu-count">0</span>)</h3>
-                        <span class="text-xs text-stone-500">แก้ไขราคาขายหรือต้นทุนได้ทันที</span>
+                        <span class="text-xs text-stone-500">พิมพ์ชื่อเพื่อค้นหา หรือแก้ไขราคาขายและต้นทุนได้ทันที</span>
                     </div>
-                    <div id="merchant-menu-list" class="flex flex-col gap-3.5 max-h-[750px] overflow-y-auto pr-1">
-                        <!-- เติมด้วย JS -->
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <select id="merchant-menu-cat-filter" onchange="renderMerchantMenu()" class="px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-medium text-stone-700 focus:outline-none focus:border-amber-600">
+                            <option value="all">ทุกหมวดหมู่</option>
+                            <option value="coffee">☕ เครื่องดื่ม & กาแฟ (ทั้งหมด)</option>
+                            <option value="coffee:กาแฟ">↳ กาแฟ</option>
+                            <option value="coffee:ชา-นม">↳ ชา-นม</option>
+                            <option value="coffee:นมหมี">↳ นมหมี</option>
+                            <option value="coffee:ชา-น้ำผลไม้">↳ ชา-น้ำผลไม้</option>
+                            <option value="coffee:โซดา">↳ โซดา</option>
+                            <option value="coffee:เฉาก๊วย">↳ เฉาก๊วย</option>
+                            <option value="pizza">🍕 พิซซ่า & ของทานเล่น</option>
+                        </select>
+                        <div class="relative">
+                            <i data-lucide="search" class="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                            <input type="text" id="merchant-menu-search" oninput="renderMerchantMenu()" placeholder="ค้นหารายการเมนู..." class="w-full sm:w-64 pl-9 pr-8 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-amber-600">
+                            <button type="button" onclick="clearMerchantMenuSearch()" id="btn-clear-merchant-search" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
                     </div>
+                </div>
+                <div id="merchant-menu-list" class="flex flex-col gap-3.5">
+                    <!-- เติมด้วย JS -->
                 </div>
             </div>
         </section>
@@ -601,17 +649,20 @@
         let savedDailySummaries = [];
         let cart = [];
         let currentCategory = 'all';
+        let currentSubCategory = 'all';
         let currentTable = 'โต๊ะ 1';
         let uploadedImageBase64 = '';
         let isFirstOrderLoad = true;
         let isMerchantAuthenticated = false;
         const MERCHANT_PIN = "1234"; // รหัส PIN สำหรับเข้าสู่หน้าจัดการร้านค้า
+        const DRINK_SUBCATEGORIES = ['กาแฟ', 'ชา-นม', 'นมหมี', 'ชา-น้ำผลไม้', 'โซดา', 'เฉาก๊วย'];
 
         // เมนูเริ่มต้น (กรณีเปิดร้านครั้งแรก)
         const defaultMenus = [
             {
                 name: "เอสเปรสโซ่เย็น (Iced Espresso)",
                 category: "coffee",
+                subCategory: "กาแฟ",
                 price: 65,
                 cost: 22,
                 desc: "กาแฟคั่วเข้มหอมกรุ่น รสชาติกลมกล่อมสไตล์ไทย",
@@ -620,6 +671,7 @@
             {
                 name: "คาราเมลมัคคิอาโต้ (Caramel Macchiato)",
                 category: "coffee",
+                subCategory: "กาแฟ",
                 price: 85,
                 cost: 30,
                 desc: "นมสดฟองนุ่มราดซอสคาราเมลหอมหวานตัดกับช็อตเอสเปรสโซ่",
@@ -628,6 +680,7 @@
             {
                 name: "มัทฉะลาเต้เย็น (Iced Matcha Latte)",
                 category: "coffee",
+                subCategory: "ชา-นม",
                 price: 90,
                 cost: 35,
                 desc: "ผงมัทฉะแท้จากญี่ปุ่นชงกับนมสดแท้ หอมละมุน",
@@ -919,11 +972,38 @@
 
         window.filterCategory = function(cat) {
             currentCategory = cat;
+            currentSubCategory = 'all';
             document.querySelectorAll('.cat-btn').forEach(btn => {
                 btn.className = "cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-white text-stone-700 hover:bg-stone-100 border border-stone-200 transition flex items-center gap-1.5";
             });
             const activeBtn = document.getElementById(`cat-${cat}`);
             activeBtn.className = "cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-stone-900 text-white shadow-sm transition flex items-center gap-1.5";
+
+            const subcatBar = document.getElementById('customer-subcat-bar');
+            if (subcatBar) {
+                if (cat === 'coffee') {
+                    subcatBar.classList.remove('hidden');
+                    updateSubCatButtonsUI('all');
+                } else {
+                    subcatBar.classList.add('hidden');
+                }
+            }
+            renderCustomerMenu();
+        };
+
+        function updateSubCatButtonsUI(subCat) {
+            document.querySelectorAll('.subcat-btn').forEach(btn => {
+                btn.className = "subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-white text-stone-700 hover:bg-amber-50 border border-stone-200 transition";
+            });
+            const activeSubBtn = document.getElementById(`subcat-${subCat}`);
+            if (activeSubBtn) {
+                activeSubBtn.className = "subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-amber-600 text-white shadow-sm transition";
+            }
+        }
+
+        window.filterSubCategory = function(subCat) {
+            currentSubCategory = subCat;
+            updateSubCatButtonsUI(subCat);
             renderCustomerMenu();
         };
 
@@ -933,8 +1013,10 @@
 
             const filtered = menuItems.filter(item => {
                 const matchCat = currentCategory === 'all' || item.category === currentCategory;
+                const itemSub = item.subCategory || 'กาแฟ';
+                const matchSubCat = currentCategory !== 'coffee' || currentSubCategory === 'all' || itemSub === currentSubCategory;
                 const matchSearch = item.name.toLowerCase().includes(searchQuery) || (item.desc && item.desc.toLowerCase().includes(searchQuery));
-                return matchCat && matchSearch;
+                return matchCat && matchSubCat && matchSearch;
             });
 
             if (filtered.length === 0) {
@@ -948,13 +1030,16 @@
                 const fallbackImg = item.category === 'pizza' 
                     ? 'https://placehold.co/600x400/ea580c/ffffff?text=Pizza' 
                     : 'https://placehold.co/600x400/78350f/ffffff?text=Coffee';
+                const badgeLabel = item.category === 'pizza'
+                    ? '🍕 พิซซ่า'
+                    : `☕ ${item.subCategory || 'เครื่องดื่ม'}`;
 
                 return `
                 <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-stone-200/80 flex flex-col">
                     <div class="relative h-44 bg-stone-100 overflow-hidden">
                         <img src="${item.image || fallbackImg}" onerror="this.src='${fallbackImg}'" alt="${item.name}" class="w-full h-full object-cover hover:scale-105 transition duration-300">
                         <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-semibold backdrop-blur-md ${item.category === 'pizza' ? 'bg-orange-600/90 text-white' : 'bg-stone-900/80 text-amber-300'}">
-                            ${item.category === 'pizza' ? '🍕 พิซซ่า' : '☕ เครื่องดื่ม'}
+                            ${badgeLabel}
                         </span>
                     </div>
                     <div class="p-4 flex-1 flex flex-col justify-between">
@@ -1213,10 +1298,19 @@
         };
 
         // 2. เพิ่มเมนูใหม่เข้าฐานข้อมูล
+        window.toggleAddMenuSubcategory = function() {
+            const cat = document.getElementById('menu-category').value;
+            const wrapper = document.getElementById('add-menu-subcat-wrapper');
+            if (wrapper) {
+                wrapper.classList.toggle('hidden', cat !== 'coffee');
+            }
+        };
+
         window.handleAddMenu = async function(event) {
             event.preventDefault();
             const name = document.getElementById('menu-name').value.trim();
             const category = document.getElementById('menu-category').value;
+            const subCategory = category === 'coffee' ? document.getElementById('menu-subcategory').value : '';
             const price = Number(document.getElementById('menu-price').value);
             const cost = Number(document.getElementById('menu-cost').value || 0);
             const desc = document.getElementById('menu-desc').value.trim();
@@ -1228,7 +1322,7 @@
                 : 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80'
             );
 
-            const newItem = { name, category, price, cost, desc, image: finalImage };
+            const newItem = { name, category, subCategory, price, cost, desc, image: finalImage };
 
             try {
                 if (db && currentUser) {
@@ -1243,6 +1337,7 @@
 
                 // รีเซ็ตฟอร์ม
                 document.getElementById('add-menu-form').reset();
+                toggleAddMenuSubcategory();
                 uploadedImageBase64 = '';
                 document.getElementById('image-preview-img').classList.add('hidden');
                 document.getElementById('image-preview-placeholder').classList.remove('hidden');
@@ -1250,6 +1345,25 @@
             } catch (error) {
                 console.error("Add menu error:", error);
                 showToast("❌ ไม่สามารถเพิ่มเมนูได้ กรุณาลองใหม่", 'red');
+            }
+        };
+
+        // อัปเดตหมวดย่อยของเมนูเครื่องดื่มที่มีอยู่แล้ว
+        window.updateMenuSubCategory = async function(itemId, newSubCategory) {
+            try {
+                if (db && currentUser) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId);
+                    await updateDoc(docRef, { subCategory: newSubCategory });
+                } else {
+                    const item = menuItems.find(m => m.id === itemId);
+                    if (item) item.subCategory = newSubCategory;
+                    renderCustomerMenu();
+                    renderMerchantMenu();
+                }
+                showToast(`📂 เปลี่ยนหมวดย่อยเป็น "${newSubCategory}" แล้ว`, "emerald");
+            } catch (error) {
+                console.error("Update subcategory error:", error);
+                showToast("❌ ไม่สามารถเปลี่ยนหมวดย่อยได้", "red");
             }
         };
 
@@ -1311,23 +1425,74 @@
             }
         };
 
+        window.clearMerchantMenuSearch = function() {
+            const searchInput = document.getElementById('merchant-menu-search');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            renderMerchantMenu();
+        };
+
         function renderMerchantMenu() {
             const list = document.getElementById('merchant-menu-list');
-            document.getElementById('merchant-menu-count').textContent = menuItems.length;
+            const searchInput = document.getElementById('merchant-menu-search');
+            const catFilterEl = document.getElementById('merchant-menu-cat-filter');
+            const clearBtn = document.getElementById('btn-clear-merchant-search');
 
-            list.innerHTML = menuItems.map(item => {
+            const searchText = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            const selectedCat = catFilterEl ? catFilterEl.value : 'all';
+
+            if (clearBtn) {
+                clearBtn.classList.toggle('hidden', searchText.length === 0);
+            }
+
+            const filteredMenus = menuItems.filter(item => {
+                let matchCat = true;
+                if (selectedCat === 'pizza') {
+                    matchCat = item.category === 'pizza';
+                } else if (selectedCat === 'coffee') {
+                    matchCat = item.category === 'coffee';
+                } else if (selectedCat.startsWith('coffee:')) {
+                    const targetSub = selectedCat.split(':')[1];
+                    matchCat = item.category === 'coffee' && (item.subCategory || 'กาแฟ') === targetSub;
+                }
+                const matchText = !searchText
+                    || (item.name && item.name.toLowerCase().includes(searchText))
+                    || (item.desc && item.desc.toLowerCase().includes(searchText));
+                return matchCat && matchText;
+            });
+
+            document.getElementById('merchant-menu-count').textContent = searchText || selectedCat !== 'all'
+                ? `${filteredMenus.length} / ${menuItems.length}`
+                : menuItems.length;
+
+            if (filteredMenus.length === 0) {
+                list.innerHTML = `<div class="text-center py-8 text-sm text-stone-400">ไม่พบรายการเมนูที่ค้นหา</div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            list.innerHTML = filteredMenus.map(item => {
                 const price = Number(item.price || 0);
                 const cost = Number(item.cost || 0);
                 const profit = price - cost;
+                const currentSub = item.subCategory || 'กาแฟ';
                 return `
                 <div class="p-4 rounded-2xl border border-stone-200 bg-stone-50/70 hover:bg-white hover:shadow-sm transition space-y-3">
                     <div class="flex items-start justify-between gap-3">
                         <div class="flex items-center gap-3.5 min-w-0 flex-1">
                             <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover shrink-0 bg-stone-200 border border-stone-200/80">
                             <div class="min-w-0 flex-1">
-                                <span class="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-md ${item.category === 'pizza' ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-800'}">
-                                    ${item.category === 'pizza' ? '🍕 พิซซ่า & ของทานเล่น' : '☕ เครื่องดื่ม & กาแฟ'}
-                                </span>
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <span class="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-md ${item.category === 'pizza' ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-800'}">
+                                        ${item.category === 'pizza' ? '🍕 พิซซ่า & ของทานเล่น' : '☕ เครื่องดื่ม & กาแฟ'}
+                                    </span>
+                                    ${item.category === 'coffee' ? `
+                                        <select onchange="updateMenuSubCategory('${item.id}', this.value)" title="เลือกหมวดย่อยเครื่องดื่ม" class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-white border border-amber-300 text-amber-900 focus:outline-none focus:border-amber-600">
+                                            ${DRINK_SUBCATEGORIES.map(sc => `<option value="${sc}" ${currentSub === sc ? 'selected' : ''}>หมวด: ${sc}</option>`).join('')}
+                                        </select>
+                                    ` : ''}
+                                </div>
                                 <h4 class="font-bold text-base text-stone-900 mt-1 break-words leading-snug">${item.name}</h4>
                                 ${item.desc ? `<p class="text-xs text-stone-500 mt-0.5 line-clamp-1">${item.desc}</p>` : ''}
                             </div>
