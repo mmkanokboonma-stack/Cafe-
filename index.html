@@ -54,7 +54,11 @@
             </div>
 
             <!-- แถบสถานะสำหรับฝั่งร้านค้า (จะแสดงเฉพาะเมื่อล็อกอินเข้าโหมดร้านค้าแล้วเท่านั้น) -->
-            <div id="merchant-mode-controls" class="hidden flex items-center gap-2">
+            <div id="merchant-mode-controls" class="hidden flex flex-wrap items-center gap-2">
+                <button type="button" id="wake-lock-badge" onclick="toggleMerchantWakeLock()" title="คลิกเพื่อเปิด/ปิดระบบกันหน้าจอดับ" class="text-xs bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition hover:bg-emerald-600/30">
+                    <i data-lucide="sun" class="w-3.5 h-3.5"></i>
+                    <span id="wake-lock-text">เปิดจอค้างไว้ (กันหลับ)</span>
+                </button>
                 <span class="text-xs bg-amber-600/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5">
                     <i data-lucide="shield-check" class="w-4 h-4"></i> โหมดร้านค้า (POS)
                 </span>
@@ -1025,6 +1029,86 @@
         }
 
         // ==========================================
+        // ระบบกันหน้าจอดับอัตโนมัติ (Screen Wake Lock) สำหรับโหมดร้านค้า POS
+        // ==========================================
+        let screenWakeLock = null;
+        let isWakeLockDesired = true;
+
+        function updateWakeLockUI(isActive, isUnsupported = false) {
+            const badge = document.getElementById('wake-lock-badge');
+            const textEl = document.getElementById('wake-lock-text');
+            if (!badge || !textEl) return;
+
+            if (isUnsupported) {
+                badge.className = "text-xs bg-stone-700/60 text-stone-300 border border-stone-600 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5";
+                textEl.textContent = "โปรดตั้งค่าจอไม่ให้ดับเอง";
+            } else if (isActive) {
+                badge.className = "text-xs bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition hover:bg-emerald-600/30";
+                textEl.textContent = "เปิดจอค้างไว้ (กันหลับ)";
+            } else {
+                badge.className = "text-xs bg-stone-800 text-stone-400 border border-stone-700 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition hover:bg-stone-700";
+                textEl.textContent = "ปิดกันหน้าจอดับ";
+            }
+        }
+
+        async function requestMerchantWakeLock() {
+            if (!isMerchantAuthenticated || !isWakeLockDesired) return;
+            if (!('wakeLock' in navigator)) {
+                updateWakeLockUI(false, true);
+                return;
+            }
+            try {
+                if (screenWakeLock !== null) return;
+                screenWakeLock = await navigator.wakeLock.request('screen');
+                updateWakeLockUI(true);
+                screenWakeLock.addEventListener('release', () => {
+                    screenWakeLock = null;
+                    if (isMerchantAuthenticated) {
+                        updateWakeLockUI(false);
+                    }
+                });
+            } catch (err) {
+                console.warn("Wake Lock request failed:", err);
+                updateWakeLockUI(false);
+            }
+        }
+
+        async function releaseMerchantWakeLock() {
+            if (screenWakeLock !== null) {
+                try {
+                    await screenWakeLock.release();
+                } catch (e) {
+                    console.warn("Wake Lock release error:", e);
+                }
+                screenWakeLock = null;
+            }
+            updateWakeLockUI(false);
+        }
+
+        window.toggleMerchantWakeLock = async function() {
+            if (!('wakeLock' in navigator)) {
+                showToast("⚠️ เบราว์เซอร์นี้ไม่รองรับการล็อกหน้าจออัตโนมัติ กรุณาตั้งค่าไม่ให้จอพักในเครื่อง", "amber");
+                return;
+            }
+            if (screenWakeLock !== null) {
+                isWakeLockDesired = false;
+                await releaseMerchantWakeLock();
+                showToast("🌙 ปิดระบบเปิดหน้าจอค้างไว้แล้ว", "stone");
+            } else {
+                isWakeLockDesired = true;
+                await requestMerchantWakeLock();
+                showToast("☀️ เปิดระบบกันหน้าจอดับแล้ว (เสียงแจ้งเตือนจะดังตลอด)", "emerald");
+            }
+        };
+
+        // ขอ Wake Lock ใหม่อัตโนมัติเมื่อสลับแท็บกลับมาที่หน้าร้านค้า
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && isMerchantAuthenticated && isWakeLockDesired) {
+                requestMerchantWakeLock();
+            }
+        });
+
+        // ==========================================
         // ฟังก์ชันจัดการ UI และการสลับหน้าจอ (ป้องกันลูกค้าเข้าถึงฝั่งร้านค้า)
         // ==========================================
         window.openMerchantAuthModal = function() {
@@ -1049,7 +1133,7 @@
                 isMerchantAuthenticated = true;
                 closeMerchantAuthModal();
                 switchMode('merchant');
-                showToast("🔓 เข้าสู่ระบบจัดการร้านค้าเรียบร้อย", "emerald");
+                showToast("🔓 เข้าสู่ระบบจัดการร้านค้าเรียบร้อย (เปิดจอค้างไว้กันหลับ)", "emerald");
             } else {
                 document.getElementById('pin-error-msg').classList.remove('hidden');
                 document.getElementById('merchant-pin-input').value = '';
@@ -1059,6 +1143,7 @@
 
         window.logoutMerchant = function() {
             isMerchantAuthenticated = false;
+            releaseMerchantWakeLock();
             switchMode('customer');
             showToast("🔒 ออกจากระบบร้านค้าแล้ว", "stone");
         };
@@ -1078,6 +1163,8 @@
                 merchantView.classList.remove('hidden');
                 merchantControls.classList.remove('hidden');
                 document.getElementById('floating-cart-bar').classList.add('translate-y-32');
+                isWakeLockDesired = true;
+                requestMerchantWakeLock();
             }
             lucide.createIcons();
         };
