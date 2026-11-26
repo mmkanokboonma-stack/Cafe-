@@ -788,6 +788,7 @@
                             currentUser = user;
                             updateDbStatusBadge(true);
                             await setupFirestoreListeners();
+                            startSilentBackgroundRefresh();
                         }
                     });
                 } catch (error) {
@@ -891,6 +892,68 @@
             }, (error) => {
                 console.error("Daily summaries snapshot error:", error);
             });
+        }
+
+        // ระบบซิงค์ข้อมูลเมนู ออเดอร์ และยอดขายอัตโนมัติในพื้นหลังทุกๆ 3 ชั่วโมง (ไม่รีโหลดหน้าเว็บ ไม่รบกวนลูกค้าและหลังร้าน)
+        let silentRefreshTimer = null;
+        const SILENT_REFRESH_INTERVAL_MS = 3 * 60 * 60 * 1000; // 3 ชั่วโมง (10,800,000 มิลลิวินาที)
+
+        async function performSilentBackgroundSync() {
+            if (!db || !currentUser) return;
+            try {
+                const menuColRef = collection(db, 'artifacts', appId, 'public', 'data', 'menu_items');
+                const ordersColRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+                const summariesColRef = collection(db, 'artifacts', appId, 'public', 'data', 'daily_summaries');
+
+                const [menuSnap, ordersSnap, summariesSnap] = await Promise.all([
+                    getDocs(menuColRef),
+                    getDocs(ordersColRef),
+                    getDocs(summariesColRef)
+                ]);
+
+                // ตรวจสอบว่าผู้ใช้ไม่ได้กำลังพิมพ์แก้ไขช่อง input อยู่ในขณะนั้น เพื่อไม่ให้ค่าที่กำลังพิมพ์ถูกเขียนทับ
+                const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+                const isUserTyping = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select';
+
+                menuItems = menuSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                orders = ordersSnap.docs
+                    .map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                savedDailySummaries = summariesSnap.docs
+                    .map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+                // อัปเดตตะกร้าสินค้าของลูกค้าให้ตรงกับราคา/ชื่อเมนูล่าสุดโดยไม่ล้างรายการที่เลือกไว้
+                if (cart.length > 0) {
+                    cart = cart.map(cartItem => {
+                        const latestMenu = menuItems.find(m => m.id === cartItem.id);
+                        return latestMenu
+                            ? { ...latestMenu, qty: cartItem.qty }
+                            : cartItem;
+                    });
+                    updateFloatingCart();
+                }
+
+                if (!isUserTyping) {
+                    renderCustomerMenu();
+                    renderMerchantMenu();
+                }
+                renderMerchantOrders();
+                renderCustomerActiveOrders();
+                renderDailySummary();
+                renderSavedDailySummaries();
+            } catch (err) {
+                console.error("Silent background sync error:", err);
+            }
+        }
+
+        function startSilentBackgroundRefresh() {
+            if (silentRefreshTimer) {
+                clearInterval(silentRefreshTimer);
+            }
+            silentRefreshTimer = setInterval(() => {
+                performSilentBackgroundSync();
+            }, SILENT_REFRESH_INTERVAL_MS);
         }
 
         // เสียงแจ้งเตือนเบาๆ ด้วย Web Audio API เมื่อมีออเดอร์เข้า
