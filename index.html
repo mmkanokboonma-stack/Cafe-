@@ -777,7 +777,18 @@
 
         // เริ่มต้นการทำงานของระบบ
         async function initApp() {
-            lucide.createIcons();
+            try {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            } catch (e) {
+                console.warn("Lucide icon warning:", e);
+            }
+
+            // แสดงเมนูเริ่มต้นทันทีเพื่อไม่ให้หน้าเว็บว่างเปล่าแม้เน็ตช้าหรือกำลังเชื่อมต่อ Cloud
+            menuItems = defaultMenus.map((m, idx) => ({ id: 'local_' + idx, ...m }));
+            renderAll();
+
             checkUrlParams();
             generateTableQRCodes();
             setDefaultSummaryDate();
@@ -958,6 +969,8 @@
             }
         }
 
+        let lastRenderedBoardDate = getLocalDateString(Date.now());
+
         function startSilentBackgroundRefresh() {
             if (silentRefreshTimer) {
                 clearInterval(silentRefreshTimer);
@@ -965,6 +978,18 @@
             silentRefreshTimer = setInterval(() => {
                 performSilentBackgroundSync();
             }, SILENT_REFRESH_INTERVAL_MS);
+
+            // ตรวจสอบทุก 1 นาที เผื่อเปิดหน้าจอร้านค้าค้างไว้ข้ามคืน พอขึ้นวันใหม่ให้รีเซ็ตกระดานออเดอร์เป็น 0 ทันที
+            setInterval(() => {
+                const currentDay = getLocalDateString(Date.now());
+                if (currentDay !== lastRenderedBoardDate) {
+                    lastRenderedBoardDate = currentDay;
+                    setDefaultSummaryDate();
+                    renderMerchantOrders();
+                    renderCustomerActiveOrders();
+                    renderDailySummary();
+                }
+            }, 60 * 1000);
         }
 
         // เสียงแจ้งเตือนเบาๆ ด้วย Web Audio API เมื่อมีออเดอร์เข้า (ใช้เสียงดนตรี 4 จังหวะ)
@@ -1323,8 +1348,10 @@
         function renderCustomerActiveOrders() {
             const section = document.getElementById('customer-active-orders');
             const list = document.getElementById('customer-orders-list');
-            // แสดงเฉพาะออเดอร์ของโต๊ะนี้ที่ถูกสั่งจากเครื่อง/เซสชันของลูกค้าคนนี้เท่านั้น
+            const todayStr = getLocalDateString(Date.now());
+            // แสดงเฉพาะออเดอร์ของวันนี้ โต๊ะนี้ และที่ถูกสั่งจากเครื่อง/เซสชันของลูกค้าคนนี้เท่านั้น
             const tableOrders = orders.filter(o =>
+                getLocalDateString(o.createdAt || Date.now()) === todayStr &&
                 o.table === currentTable &&
                 (o.customerSessionId === customerSessionId || customerOwnOrderIds.includes(o.id))
             );
@@ -1652,15 +1679,19 @@
             lucide.createIcons();
         }
 
-        // 4. แสดงผลและอัปเดตสถานะออเดอร์ฝั่งร้านค้า (พร้อมปุ่มลบออกเป็นบางรายการ)
+        // 4. แสดงผลและอัปเดตสถานะออเดอร์ฝั่งร้านค้า (รีเซ็ตตามวัน แสดงเฉพาะออเดอร์ของวันนี้)
         function renderMerchantOrders() {
             const pendingList = document.getElementById('list-orders-pending');
             const preparingList = document.getElementById('list-orders-preparing');
             const completedList = document.getElementById('list-orders-completed');
 
-            const pending = orders.filter(o => o.status === 'pending');
-            const preparing = orders.filter(o => o.status === 'preparing');
-            const completed = orders.filter(o => o.status === 'completed');
+            const todayStr = getLocalDateString(Date.now());
+            lastRenderedBoardDate = todayStr;
+            const todayOrders = orders.filter(o => getLocalDateString(o.createdAt || Date.now()) === todayStr);
+
+            const pending = todayOrders.filter(o => o.status === 'pending');
+            const preparing = todayOrders.filter(o => o.status === 'preparing');
+            const completed = todayOrders.filter(o => o.status === 'completed');
 
             document.getElementById('count-pending').textContent = pending.length;
             document.getElementById('pending-orders-count').textContent = pending.length;
