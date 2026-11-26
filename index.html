@@ -212,12 +212,12 @@
                     <i data-lucide="qr-code" class="w-4 h-4 text-stone-600"></i>
                     <span>QR Code ประจำโต๊ะ</span>
                 </button>
+                <button onclick="switchMerchantTab('summary')" id="tab-merchant-summary" class="merchant-tab px-4 py-2 rounded-xl font-medium text-sm bg-stone-100 text-stone-700 hover:bg-stone-200 flex items-center gap-2">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-600"></i>
+                    <span>สรุปยอดขาย & กำไรรายวัน</span>
+                </button>
             </div>
             <div class="text-xs text-stone-500 flex items-center gap-1.5 px-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                เชื่อมต่อระบบรับออเดอร์สด
-            </div>
-        </div>
 
         <!-- แท็บย่อย 2.1: กระดานรับออเดอร์แบบเรียลไทม์ -->
         <section id="merchant-section-orders" class="space-y-6">
@@ -262,11 +262,7 @@
                     </h3>
                     <form id="add-menu-form" onsubmit="handleAddMenu(event)" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-stone-700 mb-1">ชื่อเมนู *</label>
-                            <input type="text" id="menu-name" required placeholder="เช่น ลาเต้เย็น, พิซซ่าฮาวายเอี้ยน" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-sm font-medium text-stone-700 mb-1">หมวดหมู่ *</label>
                                 <select id="menu-category" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600 bg-white">
@@ -275,8 +271,12 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-stone-700 mb-1">ราคา (บาท) *</label>
+                                <label class="block text-sm font-medium text-stone-700 mb-1">ราคาขาย (บาท) *</label>
                                 <input type="number" id="menu-price" required min="1" placeholder="85" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-stone-700 mb-1">ต้นทุน/ชิ้น (บาท)</label>
+                                <input type="number" id="menu-cost" min="0" step="0.01" placeholder="35" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
                             </div>
                         </div>
 
@@ -353,6 +353,126 @@
 
                 <div id="qr-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                     <!-- การ์ด QR Code ของแต่ละโต๊ะ -->
+                </div>
+            </div>
+        </section>
+
+        <!-- แท็บย่อย 2.4: สรุปยอดขาย ต้นทุน และกำไรรายวัน -->
+        <section id="merchant-section-summary" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 mb-6 border-b border-stone-100">
+                    <div>
+                        <h3 class="text-xl font-bold text-stone-900 flex items-center gap-2">
+                            <i data-lucide="bar-chart-3" class="w-6 h-6 text-emerald-600"></i>
+                            สรุปยอดขาย ต้นทุน และกำไรรายวัน
+                        </h3>
+                        <p class="text-xs text-stone-500 mt-1">คำนวณจากรายการที่สั่งซื้อทั้งหมดในวันที่เลือก (แยกตามหมวดเครื่องดื่มและหมวดพิซซ่า)</p>
+                    </div>
+                    <div class="flex items-center gap-2 bg-stone-50 p-2 rounded-xl border border-stone-200">
+                        <label for="summary-date-picker" class="text-xs font-semibold text-stone-600 pl-2">เลือกวันที่:</label>
+                        <input type="date" id="summary-date-picker" onchange="renderDailySummary()" class="px-3 py-1.5 bg-white border border-stone-300 rounded-lg text-sm font-medium text-stone-800 focus:outline-none focus:border-amber-600">
+                    </div>
+                </div>
+
+                <!-- การ์ดสรุปภาพรวมทั้งวัน -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-stone-900 text-white p-5 rounded-2xl shadow-sm">
+                        <p class="text-xs text-stone-400">ยอดขายรวมทั้งวัน</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-amber-400 mt-1">฿<span id="sum-total-sales">0</span></p>
+                        <p class="text-xs text-stone-400 mt-2">จำนวน <span id="sum-total-orders" class="text-white font-semibold">0</span> ออเดอร์</p>
+                    </div>
+                    <div class="bg-amber-50/80 border border-amber-200 p-5 rounded-2xl">
+                        <p class="text-xs text-amber-900 font-medium">ต้นทุนรวมทั้งวัน</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-amber-800 mt-1">฿<span id="sum-total-cost">0</span></p>
+                        <p class="text-xs text-amber-700 mt-2">คำนวณตามต้นทุนต่อเมนูที่ตั้งไว้</p>
+                    </div>
+                    <div class="bg-emerald-50/90 border border-emerald-200 p-5 rounded-2xl">
+                        <p class="text-xs text-emerald-900 font-medium">กำไรสุทธิทั้งวัน</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-emerald-700 mt-1">฿<span id="sum-total-profit">0</span></p>
+                        <p class="text-xs text-emerald-700 mt-2">อัตรากำไร: <span id="sum-profit-margin" class="font-bold">0%</span></p>
+                    </div>
+                </div>
+
+                <!-- แยกตามหมวดหมู่: หมวดน้ำ vs หมวดพิซซ่า -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                    <!-- หมวดเครื่องดื่ม & กาแฟ -->
+                    <div class="border border-stone-200 rounded-2xl p-5 bg-stone-50/50">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="font-bold text-stone-800 flex items-center gap-2">
+                                <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">☕</span>
+                                หมวดเครื่องดื่ม & กาแฟ
+                            </span>
+                            <span class="text-xs font-semibold bg-white px-2.5 py-1 rounded-lg border border-stone-200 text-stone-600">
+                                ขายได้ <span id="sum-coffee-qty" class="text-stone-900 font-bold">0</span> แก้ว/ชิ้น
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-stone-200/70 text-center">
+                            <div class="bg-white p-2.5 rounded-xl border border-stone-100">
+                                <p class="text-[11px] text-stone-400">ยอดขาย</p>
+                                <p class="text-sm font-bold text-stone-800 mt-0.5">฿<span id="sum-coffee-sales">0</span></p>
+                            </div>
+                            <div class="bg-white p-2.5 rounded-xl border border-stone-100">
+                                <p class="text-[11px] text-stone-400">ต้นทุน</p>
+                                <p class="text-sm font-bold text-amber-700 mt-0.5">฿<span id="sum-coffee-cost">0</span></p>
+                            </div>
+                            <div class="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100">
+                                <p class="text-[11px] text-emerald-700">กำไร</p>
+                                <p class="text-sm font-bold text-emerald-700 mt-0.5">฿<span id="sum-coffee-profit">0</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- หมวดพิซซ่า & ของทานเล่น -->
+                    <div class="border border-stone-200 rounded-2xl p-5 bg-stone-50/50">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="font-bold text-stone-800 flex items-center gap-2">
+                                <span class="w-8 h-8 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center">🍕</span>
+                                หมวดพิซซ่า & ของทานเล่น
+                            </span>
+                            <span class="text-xs font-semibold bg-white px-2.5 py-1 rounded-lg border border-stone-200 text-stone-600">
+                                ขายได้ <span id="sum-pizza-qty" class="text-stone-900 font-bold">0</span> ถาด/ชิ้น
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-stone-200/70 text-center">
+                            <div class="bg-white p-2.5 rounded-xl border border-stone-100">
+                                <p class="text-[11px] text-stone-400">ยอดขาย</p>
+                                <p class="text-sm font-bold text-stone-800 mt-0.5">฿<span id="sum-pizza-sales">0</span></p>
+                            </div>
+                            <div class="bg-white p-2.5 rounded-xl border border-stone-100">
+                                <p class="text-[11px] text-stone-400">ต้นทุน</p>
+                                <p class="text-sm font-bold text-amber-700 mt-0.5">฿<span id="sum-pizza-cost">0</span></p>
+                            </div>
+                            <div class="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100">
+                                <p class="text-[11px] text-emerald-700">กำไร</p>
+                                <p class="text-sm font-bold text-emerald-700 mt-0.5">฿<span id="sum-pizza-profit">0</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ตารางรายละเอียดต้นทุนและกำไรแยกรายเมนู -->
+                <div>
+                    <h4 class="font-bold text-stone-800 text-sm mb-3">รายละเอียดยอดขาย ต้นทุน และกำไรแยกรายเมนู</h4>
+                    <div class="overflow-x-auto border border-stone-200 rounded-2xl">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-stone-100 text-stone-700 text-xs">
+                                    <th class="py-3 px-4 font-semibold">ชื่อเมนู</th>
+                                    <th class="py-3 px-3 font-semibold">หมวดหมู่</th>
+                                    <th class="py-3 px-3 font-semibold text-center">จำนวน</th>
+                                    <th class="py-3 px-3 font-semibold text-right">ราคาขาย/ชิ้น</th>
+                                    <th class="py-3 px-3 font-semibold text-right">ต้นทุน/ชิ้น</th>
+                                    <th class="py-3 px-3 font-semibold text-right">กำไร/ชิ้น</th>
+                                    <th class="py-3 px-3 font-semibold text-right">ยอดขายรวม</th>
+                                    <th class="py-3 px-3 font-semibold text-right">ต้นทุนรวม</th>
+                                    <th class="py-3 px-4 font-semibold text-right">กำไรรวม</th>
+                                </tr>
+                            </thead>
+                            <tbody id="summary-items-tbody" class="divide-y divide-stone-100 bg-white">
+                                <!-- เติมด้วย JS -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
@@ -447,6 +567,7 @@
                 name: "เอสเปรสโซ่เย็น (Iced Espresso)",
                 category: "coffee",
                 price: 65,
+                cost: 22,
                 desc: "กาแฟคั่วเข้มหอมกรุ่น รสชาติกลมกล่อมสไตล์ไทย",
                 image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80"
             },
@@ -454,13 +575,15 @@
                 name: "คาราเมลมัคคิอาโต้ (Caramel Macchiato)",
                 category: "coffee",
                 price: 85,
-                desc: "นมสดฟองนุ่มราดซอสคาราเมลหอมหวานตัดกับช็อตเอสเพรสโซ่",
+                cost: 30,
+                desc: "นมสดฟองนุ่มราดซอสคาราเมลหอมหวานตัดกับช็อตเอสเปรสโซ่",
                 image: "https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=600&q=80"
             },
             {
                 name: "มัทฉะลาเต้เย็น (Iced Matcha Latte)",
                 category: "coffee",
                 price: 90,
+                cost: 35,
                 desc: "ผงมัทฉะแท้จากญี่ปุ่นชงกับนมสดแท้ หอมละมุน",
                 image: "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=600&q=80"
             },
@@ -468,6 +591,7 @@
                 name: "พิซซ่าเปปเปอโรนีชีส (Pepperoni Pizza)",
                 category: "pizza",
                 price: 249,
+                cost: 95,
                 desc: "แป้งโฮมเมดอบเตาถ่าน หน้าเปปเปอโรนีและมอสซาเรลล่าชีสเยิ้มๆ",
                 image: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=600&q=80"
             },
@@ -475,6 +599,7 @@
                 name: "พิซซ่าฮาวายเอี้ยน (Hawaiian Pizza)",
                 category: "pizza",
                 price: 239,
+                cost: 90,
                 desc: "แฮมรมควันชิ้นโต สับปะรดฉ่ำๆ และซอสมะเขือเทศสูตรพิเศษ",
                 image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80"
             },
@@ -482,6 +607,7 @@
                 name: "พิซซ่าทรัฟเฟิลเห็ดรวม (Truffle Mushroom)",
                 category: "pizza",
                 price: 289,
+                cost: 115,
                 desc: "ซอสครีมเห็ดทรัฟเฟิลหอมกรุ่น โรยพาเมซานชีสและเห็ดแชมปิญอง",
                 image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
             }
@@ -517,6 +643,7 @@
             lucide.createIcons();
             checkUrlParams();
             generateTableQRCodes();
+            setDefaultSummaryDate();
 
             if (firebaseConfig) {
                 try {
@@ -533,15 +660,28 @@
                     onAuthStateChanged(auth, async (user) => {
                         if (user) {
                             currentUser = user;
+                            updateDbStatusBadge(true);
                             await setupFirestoreListeners();
                         }
                     });
                 } catch (error) {
                     console.error("Firebase Init Error:", error);
+                    updateDbStatusBadge(false, error.code || error.message);
                     fallbackToLocalState();
                 }
             } else {
+                updateDbStatusBadge(false, "No Config");
                 fallbackToLocalState();
+            }
+        }
+
+        function updateDbStatusBadge(isConnected, errMsg = "") {
+            const el = document.getElementById('db-connection-status');
+            if (!el) return;
+            if (isConnected) {
+                el.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> <span class="text-emerald-700 font-medium">เชื่อมต่อ Cloud สำเร็จ (รับออเดอร์ข้ามเครื่องได้)</span>`;
+            } else {
+                el.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> <span class="text-red-600 font-medium">ออฟไลน์ (${errMsg}) — กรุณาเปิด Anonymous Auth ใน Firebase</span>`;
             }
         }
 
@@ -578,6 +718,7 @@
                 }));
                 renderCustomerMenu();
                 renderMerchantMenu();
+                renderDailySummary();
             }, (error) => {
                 console.error("Menu snapshot error:", error);
             });
@@ -605,6 +746,7 @@
                 isFirstOrderLoad = false;
                 renderMerchantOrders();
                 renderCustomerActiveOrders();
+                renderDailySummary();
             }, (error) => {
                 console.error("Orders snapshot error:", error);
             });
@@ -689,7 +831,7 @@
         };
 
         window.switchMerchantTab = function(tab) {
-            ['orders', 'menu', 'qr'].forEach(t => {
+            ['orders', 'menu', 'qr', 'summary'].forEach(t => {
                 document.getElementById(`merchant-section-${t}`).classList.add('hidden');
                 const btn = document.getElementById(`tab-merchant-${t}`);
                 btn.className = "merchant-tab px-4 py-2 rounded-xl font-medium text-sm bg-stone-100 text-stone-700 hover:bg-stone-200 flex items-center gap-2";
@@ -697,6 +839,9 @@
             document.getElementById(`merchant-section-${tab}`).classList.remove('hidden');
             const activeBtn = document.getElementById(`tab-merchant-${tab}`);
             activeBtn.className = "merchant-tab px-4 py-2 rounded-xl font-medium text-sm bg-stone-900 text-white flex items-center gap-2";
+            if (tab === 'summary') {
+                renderDailySummary();
+            }
             lucide.createIcons();
         };
 
@@ -870,7 +1015,14 @@
 
             const orderData = {
                 table: currentTable,
-                items: cart.map(c => ({ id: c.id, name: c.name, price: c.price, qty: c.qty, category: c.category })),
+                items: cart.map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    price: Number(c.price || 0),
+                    cost: Number(c.cost || 0),
+                    qty: c.qty,
+                    category: c.category
+                })),
                 total: totalAmount,
                 note: note,
                 status: 'pending', // pending -> preparing -> completed
@@ -886,6 +1038,7 @@
                     orders.unshift({ id: 'ord_' + Date.now(), ...orderData });
                     renderMerchantOrders();
                     renderCustomerActiveOrders();
+                    renderSalesReport();
                 }
 
                 cart = [];
@@ -1004,6 +1157,7 @@
             const name = document.getElementById('menu-name').value.trim();
             const category = document.getElementById('menu-category').value;
             const price = Number(document.getElementById('menu-price').value);
+            const cost = Number(document.getElementById('menu-cost').value || 0);
             const desc = document.getElementById('menu-desc').value.trim();
             const urlInput = document.getElementById('menu-image-url').value.trim();
 
@@ -1013,7 +1167,7 @@
                 : 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80'
             );
 
-            const newItem = { name, category, price, desc, image: finalImage };
+            const newItem = { name, category, price, cost, desc, image: finalImage };
 
             try {
                 if (db && currentUser) {
@@ -1023,6 +1177,7 @@
                     menuItems.push({ id: 'local_' + Date.now(), ...newItem });
                     renderCustomerMenu();
                     renderMerchantMenu();
+                    renderDailySummary();
                 }
 
                 // รีเซ็ตฟอร์ม
@@ -1034,6 +1189,26 @@
             } catch (error) {
                 console.error("Add menu error:", error);
                 showToast("❌ ไม่สามารถเพิ่มเมนูได้ กรุณาลองใหม่", 'red');
+            }
+        };
+
+        // อัปเดตต้นทุนของเมนูที่มีอยู่แล้ว
+        window.updateMenuCost = async function(itemId, rawValue) {
+            const newCost = Math.max(0, Number(rawValue || 0));
+            try {
+                if (db && currentUser) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId);
+                    await updateDoc(docRef, { cost: newCost });
+                } else {
+                    const item = menuItems.find(m => m.id === itemId);
+                    if (item) item.cost = newCost;
+                    renderMerchantMenu();
+                    renderDailySummary();
+                }
+                showToast("💰 บันทึกต้นทุนต่อชิ้นเรียบร้อย", "emerald");
+            } catch (error) {
+                console.error("Update cost error:", error);
+                showToast("❌ ไม่สามารถบันทึกต้นทุนได้", "red");
             }
         };
 
@@ -1058,23 +1233,36 @@
             const list = document.getElementById('merchant-menu-list');
             document.getElementById('merchant-menu-count').textContent = menuItems.length;
 
-            list.innerHTML = menuItems.map(item => `
+            list.innerHTML = menuItems.map(item => {
+                const price = Number(item.price || 0);
+                const cost = Number(item.cost || 0);
+                const profit = price - cost;
+                return `
                 <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-stone-200 bg-stone-50/50">
-                    <div class="flex items-center gap-3 overflow-hidden">
+                    <div class="flex items-center gap-3 overflow-hidden flex-1">
                         <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover shrink-0 bg-stone-200">
-                        <div class="min-w-0">
+                        <div class="min-w-0 flex-1">
                             <span class="text-[10px] font-bold px-2 py-0.5 rounded ${item.category === 'pizza' ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-800'}">
                                 ${item.category === 'pizza' ? 'พิซซ่า' : 'เครื่องดื่ม'}
                             </span>
                             <h4 class="font-bold text-sm text-stone-800 truncate mt-0.5">${item.name}</h4>
-                            <p class="text-sm font-bold text-amber-700">฿${item.price}</p>
+                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs">
+                                <span class="font-bold text-amber-700">ขาย ฿${price}</span>
+                                <span class="text-stone-400">|</span>
+                                <label class="inline-flex items-center gap-1 text-stone-600">
+                                    <span>ทุน ฿</span>
+                                    <input type="number" min="0" step="0.01" value="${cost}" onchange="updateMenuCost('${item.id}', this.value)" class="w-16 px-1.5 py-0.5 bg-white border border-stone-300 rounded-md text-xs font-semibold text-stone-800 focus:outline-none focus:border-amber-600">
+                                </label>
+                                <span class="font-semibold ${profit >= 0 ? 'text-emerald-600' : 'text-red-600'}">(กำไร ฿${profit.toFixed(0)})</span>
+                            </div>
                         </div>
                     </div>
                     <button onclick="deleteMenuItem('${item.id}')" title="ลบเมนู" class="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition shrink-0">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
                 </div>
-            `).join('');
+                `;
+            }).join('');
             lucide.createIcons();
         }
 
@@ -1302,6 +1490,133 @@
             lucide.createIcons();
         };
 
+        // ==========================================
+        // 6. สรุปยอดขายรายวัน แยกหมวดน้ำ & หมวดพิซซ่า พร้อมต้นทุนและกำไร
+        // ==========================================
+        function getLocalDateKey(timestamp) {
+            const d = timestamp ? new Date(timestamp) : new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        window.setSalesDateToday = function() {
+            const dateInput = document.getElementById('sales-report-date');
+            if (dateInput) {
+                dateInput.value = getLocalDateKey(Date.now());
+            }
+            renderSalesReport();
+        };
+
+        window.renderSalesReport = function() {
+            const dateInput = document.getElementById('sales-report-date');
+            const selectedDate = (dateInput && dateInput.value) ? dateInput.value : getLocalDateKey(Date.now());
+
+            // กรองออเดอร์เฉพาะวันที่เลือก
+            const dayOrders = orders.filter(ord => getLocalDateKey(ord.createdAt) === selectedDate);
+
+            const catStats = {
+                coffee: { qty: 0, rev: 0, cost: 0, profit: 0 },
+                pizza: { qty: 0, rev: 0, cost: 0, profit: 0 }
+            };
+            const itemMap = new Map();
+
+            dayOrders.forEach(ord => {
+                if (!Array.isArray(ord.items)) return;
+                ord.items.forEach(item => {
+                    const menuRef = menuItems.find(m => m.id === item.id || m.name === item.name);
+                    const cat = (item.category || menuRef?.category) === 'pizza' ? 'pizza' : 'coffee';
+                    const qty = Number(item.qty || 1);
+                    const unitPrice = Number(item.price ?? menuRef?.price ?? 0);
+                    // ใช้ต้นทุนปัจจุบันจากเมนูถ้ามี เพื่อให้แก้ต้นทุนย้อนหลังได้ทันที หรือใช้ต้นทุนที่บันทึกในบิล
+                    const unitCost = Number(menuRef?.cost ?? item.cost ?? 0);
+                    const unitProfit = unitPrice - unitCost;
+
+                    const rev = unitPrice * qty;
+                    const cost = unitCost * qty;
+                    const profit = rev - cost;
+
+                    catStats[cat].qty += qty;
+                    catStats[cat].rev += rev;
+                    catStats[cat].cost += cost;
+                    catStats[cat].profit += profit;
+
+                    const key = `${cat}__${item.name}`;
+                    if (!itemMap.has(key)) {
+                        itemMap.set(key, {
+                            name: item.name,
+                            category: cat,
+                            qty: 0,
+                            unitPrice,
+                            unitCost,
+                            unitProfit,
+                            rev: 0,
+                            cost: 0,
+                            profit: 0
+                        });
+                    }
+                    const entry = itemMap.get(key);
+                    entry.qty += qty;
+                    entry.unitPrice = unitPrice;
+                    entry.unitCost = unitCost;
+                    entry.unitProfit = unitProfit;
+                    entry.rev += rev;
+                    entry.cost += cost;
+                    entry.profit += profit;
+                });
+            });
+
+            const totalRev = catStats.coffee.rev + catStats.pizza.rev;
+            const totalCost = catStats.coffee.cost + catStats.pizza.cost;
+            const totalProfit = totalRev - totalCost;
+            const totalQty = catStats.coffee.qty + catStats.pizza.qty;
+            const margin = totalRev > 0 ? ((totalProfit / totalRev) * 100).toFixed(1) : '0';
+
+            const fmt = (n) => Number(n || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 });
+
+            document.getElementById('sales-total-revenue').textContent = fmt(totalRev);
+            document.getElementById('sales-total-qty').textContent = fmt(totalQty);
+            document.getElementById('sales-total-cost').textContent = fmt(totalCost);
+            document.getElementById('sales-total-profit').textContent = fmt(totalProfit);
+            document.getElementById('sales-profit-margin').textContent = `${margin}%`;
+
+            document.getElementById('cat-coffee-qty').textContent = fmt(catStats.coffee.qty);
+            document.getElementById('cat-coffee-rev').textContent = fmt(catStats.coffee.rev);
+            document.getElementById('cat-coffee-cost').textContent = fmt(catStats.coffee.cost);
+            document.getElementById('cat-coffee-profit').textContent = fmt(catStats.coffee.profit);
+
+            document.getElementById('cat-pizza-qty').textContent = fmt(catStats.pizza.qty);
+            document.getElementById('cat-pizza-rev').textContent = fmt(catStats.pizza.rev);
+            document.getElementById('cat-pizza-cost').textContent = fmt(catStats.pizza.cost);
+            document.getElementById('cat-pizza-profit').textContent = fmt(catStats.pizza.profit);
+
+            const tbody = document.getElementById('sales-item-breakdown-body');
+            const rows = Array.from(itemMap.values()).sort((a, b) => b.rev - a.rev);
+
+            if (rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-xs text-stone-400">ยังไม่มีรายการขายในวันที่เลือก</td></tr>`;
+            } else {
+                tbody.innerHTML = rows.map(r => `
+                    <tr class="hover:bg-stone-50/80">
+                        <td class="py-3 px-4 font-semibold text-stone-800">${r.name}</td>
+                        <td class="py-3 px-3">
+                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded ${r.category === 'pizza' ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-800'}">
+                                ${r.category === 'pizza' ? '🍕 พิซซ่า' : '☕ เครื่องดื่ม'}
+                            </span>
+                        </td>
+                        <td class="py-3 px-3 text-right font-bold text-stone-800">${fmt(r.qty)}</td>
+                        <td class="py-3 px-3 text-right text-stone-600">฿${fmt(r.unitPrice)}</td>
+                        <td class="py-3 px-3 text-right text-red-600">฿${fmt(r.unitCost)}</td>
+                        <td class="py-3 px-3 text-right font-semibold ${r.unitProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}">฿${fmt(r.unitProfit)}</td>
+                        <td class="py-3 px-3 text-right font-bold text-stone-900">฿${fmt(r.rev)}</td>
+                        <td class="py-3 px-3 text-right text-red-600">฿${fmt(r.cost)}</td>
+                        <td class="py-3 px-4 text-right font-bold ${r.profit >= 0 ? 'text-emerald-700' : 'text-red-600'}">฿${fmt(r.profit)}</td>
+                    </tr>
+                `).join('');
+            }
+        };
+
         // แสดง Toast แจ้งเตือนมุมขวาล่าง
         function showToast(message, color = 'stone') {
             const container = document.getElementById('toast-container');
@@ -1333,7 +1648,147 @@
             renderMerchantMenu();
             renderMerchantOrders();
             renderCustomerActiveOrders();
+            renderDailySummary();
         }
+
+        // ==========================================
+        // 6. สรุปยอดขาย ต้นทุน และกำไรรายวัน (แยกหมวดน้ำ / พิซซ่า)
+        // ==========================================
+        function getLocalDateString(timestamp) {
+            const d = timestamp ? new Date(timestamp) : new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function setDefaultSummaryDate() {
+            const picker = document.getElementById('summary-date-picker');
+            if (picker && !picker.value) {
+                picker.value = getLocalDateString(Date.now());
+            }
+        }
+
+        window.renderDailySummary = function() {
+            const picker = document.getElementById('summary-date-picker');
+            if (!picker) return;
+            if (!picker.value) setDefaultSummaryDate();
+
+            const selectedDate = picker.value;
+            const dayOrders = orders.filter(ord => getLocalDateString(ord.createdAt || Date.now()) === selectedDate);
+
+            // สร้าง Map ของเมนูเพื่อดึงต้นทุนล่าสุดของแต่ละเมนู
+            const menuMapById = new Map();
+            const menuMapByName = new Map();
+            menuItems.forEach(m => {
+                menuMapById.set(m.id, m);
+                menuMapByName.set(m.name, m);
+            });
+
+            let totalSales = 0;
+            let totalCost = 0;
+
+            let coffeeQty = 0, coffeeSales = 0, coffeeCost = 0;
+            let pizzaQty = 0, pizzaSales = 0, pizzaCost = 0;
+
+            const itemBreakdown = new Map();
+
+            dayOrders.forEach(ord => {
+                (ord.items || []).forEach(it => {
+                    const matchedMenu = menuMapById.get(it.id) || menuMapByName.get(it.name);
+                    const category = it.category || (matchedMenu ? matchedMenu.category : 'coffee');
+                    const unitPrice = Number(it.price || 0);
+                    // ใช้ต้นทุนปัจจุบันจากเมนูหลัก (ถ้ามี) เพื่อให้แก้ไขต้นทุนแล้วยอดคำนวณอัปเดตทันที
+                    const unitCost = matchedMenu && matchedMenu.cost !== undefined
+                        ? Number(matchedMenu.cost || 0)
+                        : Number(it.cost || 0);
+                    const qty = Number(it.qty || 1);
+
+                    const lineSales = unitPrice * qty;
+                    const lineCost = unitCost * qty;
+
+                    totalSales += lineSales;
+                    totalCost += lineCost;
+
+                    if (category === 'pizza') {
+                        pizzaQty += qty;
+                        pizzaSales += lineSales;
+                        pizzaCost += lineCost;
+                    } else {
+                        coffeeQty += qty;
+                        coffeeSales += lineSales;
+                        coffeeCost += lineCost;
+                    }
+
+                    const key = `${it.name}__${category}__${unitPrice}`;
+                    if (!itemBreakdown.has(key)) {
+                        itemBreakdown.set(key, {
+                            name: it.name,
+                            category,
+                            qty: 0,
+                            unitPrice,
+                            unitCost,
+                            sales: 0,
+                            cost: 0
+                        });
+                    }
+                    const entry = itemBreakdown.get(key);
+                    entry.qty += qty;
+                    entry.unitCost = unitCost;
+                    entry.sales += lineSales;
+                    entry.cost += lineCost;
+                });
+            });
+
+            const totalProfit = totalSales - totalCost;
+            const profitMargin = totalSales > 0 ? ((totalProfit / totalSales) * 100).toFixed(1) : '0';
+
+            document.getElementById('sum-total-sales').textContent = totalSales.toLocaleString();
+            document.getElementById('sum-total-orders').textContent = dayOrders.length.toLocaleString();
+            document.getElementById('sum-total-cost').textContent = totalCost.toLocaleString();
+            document.getElementById('sum-total-profit').textContent = totalProfit.toLocaleString();
+            document.getElementById('sum-profit-margin').textContent = `${profitMargin}%`;
+
+            document.getElementById('sum-coffee-qty').textContent = coffeeQty.toLocaleString();
+            document.getElementById('sum-coffee-sales').textContent = coffeeSales.toLocaleString();
+            document.getElementById('sum-coffee-cost').textContent = coffeeCost.toLocaleString();
+            document.getElementById('sum-coffee-profit').textContent = (coffeeSales - coffeeCost).toLocaleString();
+
+            document.getElementById('sum-pizza-qty').textContent = pizzaQty.toLocaleString();
+            document.getElementById('sum-pizza-sales').textContent = pizzaSales.toLocaleString();
+            document.getElementById('sum-pizza-cost').textContent = pizzaCost.toLocaleString();
+            document.getElementById('sum-pizza-profit').textContent = (pizzaSales - pizzaCost).toLocaleString();
+
+            const tbody = document.getElementById('summary-items-tbody');
+            const rows = Array.from(itemBreakdown.values()).sort((a, b) => b.sales - a.sales);
+
+            if (rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-stone-400 text-xs">ยังไม่มีรายการขายในวันที่เลือก</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = rows.map(row => {
+                const unitProfit = row.unitPrice - row.unitCost;
+                const totalRowProfit = row.sales - row.cost;
+                return `
+                <tr class="hover:bg-stone-50/80">
+                    <td class="py-3 px-4 font-semibold text-stone-800">${row.name}</td>
+                    <td class="py-3 px-3">
+                        <span class="text-[11px] font-bold px-2 py-0.5 rounded ${row.category === 'pizza' ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-800'}">
+                            ${row.category === 'pizza' ? '🍕 พิซซ่า' : '☕ เครื่องดื่ม'}
+                        </span>
+                    </td>
+                    <td class="py-3 px-3 text-center font-bold text-stone-700">${row.qty}</td>
+                    <td class="py-3 px-3 text-right text-stone-600">฿${row.unitPrice.toLocaleString()}</td>
+                    <td class="py-3 px-3 text-right text-amber-700">฿${row.unitCost.toLocaleString()}</td>
+                    <td class="py-3 px-3 text-right font-semibold ${unitProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}">฿${unitProfit.toLocaleString()}</td>
+                    <td class="py-3 px-3 text-right font-bold text-stone-900">฿${row.sales.toLocaleString()}</td>
+                    <td class="py-3 px-3 text-right text-amber-800">฿${row.cost.toLocaleString()}</td>
+                    <td class="py-3 px-4 text-right font-bold ${totalRowProfit >= 0 ? 'text-emerald-700' : 'text-red-600'}">฿${totalRowProfit.toLocaleString()}</td>
+                </tr>
+                `;
+            }).join('');
+        };
 
         // เริ่มทำงานเมื่อโหลดหน้าเว็บเสร็จสมบูรณ์
         window.addEventListener('DOMContentLoaded', initApp);
