@@ -953,31 +953,8 @@
             }
             silentRefreshTimer = setInterval(() => {
                 performSilentBackgroundSync();
-            }, SILENT_REFRESH_INTERVAL_MS);
-        }
-
-        // เสียงแจ้งเตือนเบาๆ ด้วย Web Audio API เมื่อมีออเดอร์เข้า
+        // เสียงแจ้งเตือนเบาๆ ด้วย Web Audio API เมื่อมีออเดอร์เข้า (ใช้เสียงดนตรี 4 จังหวะจากฝั่งลูกค้าเดิม)
         function playNotificationBeep() {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, ctx.currentTime); // โน้ต A5
-                osc.frequency.setValueAtTime(1108.73, ctx.currentTime + 0.15); // โน้ต C#6
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.5);
-            } catch (e) {
-                // ข้ามหากเบราว์เซอร์บล็อกเสียงอัตโนมัติ
-            }
-        }
-
-        // เสียงแจ้งเตือนฝั่งลูกค้าเมื่อกดยืนยันส่งออเดอร์สำเร็จ (เสียงติ๊ง-ต่อง-ต่อง ไพเราะ)
-        function playCustomerOrderSuccessSound() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 if (ctx.state === 'suspended') {
@@ -997,6 +974,29 @@
                     osc.start(startTime);
                     osc.stop(startTime + 0.45);
                 });
+            } catch (e) {
+                // ข้ามหากเบราว์เซอร์บล็อกเสียงอัตโนมัติ
+            }
+        }
+
+        // เสียงแจ้งเตือนฝั่งลูกค้าเมื่อกดยืนยันส่งออเดอร์สำเร็จ (ใช้เสียงติ๊ง-ต่อง 2 จังหวะจากหลังร้านเดิม)
+        function playCustomerOrderSuccessSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') {
+                    ctx.resume();
+                }
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime); // โน้ต A5
+                osc.frequency.setValueAtTime(1108.73, ctx.currentTime + 0.15); // โน้ต C#6
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.5);
             } catch (e) {
                 // ข้ามหากอุปกรณ์ปิดเสียงหรือเบราว์เซอร์ไม่รองรับ
             }
