@@ -340,14 +340,14 @@
                         ลิงก์เว็บไซต์ของร้าน (สำหรับฝังใน QR Code ให้มือถือสแกนได้จริง)
                     </label>
                     <div class="flex flex-col sm:flex-row gap-2">
-                        <input type="url" id="qr-base-url-input" oninput="generateTableQRCodes()" placeholder="เช่น https://baansuan-cafe.netlify.app" class="flex-1 px-3.5 py-2 bg-white border border-amber-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                        <input type="url" id="qr-base-url-input" oninput="generateTableQRCodes()" placeholder="เช่น https://mmkanokboonma-stack.github.io/Cafe-/" class="flex-1 px-3.5 py-2 bg-white border border-amber-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
                         <button type="button" onclick="resetQrBaseUrl()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-xl transition shrink-0">
                             ใช้ลิงก์หน้าเว็บปัจจุบัน
                         </button>
                     </div>
                     <p id="qr-url-warning" class="text-xs text-red-600 mt-2 hidden flex items-center gap-1">
                         <i data-lucide="alert-triangle" class="w-3.5 h-3.5 shrink-0"></i>
-                        <span>ตอนนี้คุณกำลังเปิดในโหมดทดสอบ (Preview) กล้องมือถือจริงจะยังสแกนไม่ได้จนกว่าจะนำไฟล์ไปอัปโหลดขึ้นเว็บโฮสติ้ง (เช่น Netlify) เพื่อให้ได้ลิงก์ https://... ครับ</span>
+                        <span>ตอนนี้คุณกำลังเปิดในโหมดทดสอบ (Preview) กล้องมือถือจริงจะยังสแกนไม่ได้จนกว่าจะนำไฟล์ไปอัปโหลดขึ้นเว็บโฮสติ้ง (เช่น GitHub Pages) เพื่อให้ได้ลิงก์ https://... ครับ</span>
                     </p>
                 </div>
 
@@ -388,6 +388,24 @@
     </div>
 
     <!-- ========================================== -->
+    <!-- Modal: ยืนยันการลบรายการในบิล (Confirm Modal) -->
+    <!-- ========================================== -->
+    <div id="confirm-item-delete-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4">
+            <h3 class="text-lg font-bold text-stone-900">ยืนยันการลบรายการ</h3>
+            <p id="confirm-item-delete-text" class="text-sm text-stone-600 leading-relaxed"></p>
+            <div class="flex gap-2 pt-2">
+                <button type="button" onclick="closeConfirmItemDeleteModal()" class="flex-1 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-sm transition">
+                    ยกเลิก
+                </button>
+                <button type="button" id="btn-confirm-item-delete" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition shadow">
+                    ลบรายการนี้
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
     <!-- Firebase & Application Logic               -->
     <!-- ========================================== -->
     <script type="module">
@@ -395,9 +413,18 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ตั้งค่า Firebase จาก Environment
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'brew-and-crust-pos';
+        // ตั้งค่า Firebase จาก Environment หรือโปรเจกต์ baansuan-cafe-pos
+        const firebaseConfig = typeof __firebase_config !== 'undefined'
+            ? JSON.parse(__firebase_config)
+            : {
+                apiKey: "AIzaSyATsHffYiLARGcs_F2SYCvZ2_I-7xMULWQ",
+                authDomain: "baansuan-cafe-pos.firebaseapp.com",
+                projectId: "baansuan-cafe-pos",
+                storageBucket: "baansuan-cafe-pos.firebasestorage.app",
+                messagingSenderId: "682402512495",
+                appId: "1:682402512495:web:b09d47f3f76b4d9935979a"
+            };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'baansuan-cafe-pos';
         
         let db = null;
         let auth = null;
@@ -427,7 +454,7 @@
                 name: "คาราเมลมัคคิอาโต้ (Caramel Macchiato)",
                 category: "coffee",
                 price: 85,
-                desc: "นมสดฟองนุ่มราดซอสคาราเมลหอมหวานตัดกับช็อตเอสเปรสโซ่",
+                desc: "นมสดฟองนุ่มราดซอสคาราเมลหอมหวานตัดกับช็อตเอสเพรสโซ่",
                 image: "https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=600&q=80"
             },
             {
@@ -565,7 +592,6 @@
                 // เรียงลำดับตามเวลาล่าสุด
                 newOrders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-                // แจ้งเตือนเสียง/ข้อความเมื่อมีออเดอร์ใหม่เด้งเข้ามา
                 // แจ้งเตือนเสียง/ข้อความเมื่อมีออเดอร์ใหม่เด้งเข้ามา (เฉพาะเมื่ออยู่ในโหมดร้านค้า)
                 if (!isFirstOrderLoad && newOrders.length > orders.length && isMerchantAuthenticated) {
                     const latest = newOrders[0];
@@ -1052,7 +1078,7 @@
             lucide.createIcons();
         }
 
-        // 4. แสดงผลและอัปเดตสถานะออเดอร์ฝั่งร้านค้า
+        // 4. แสดงผลและอัปเดตสถานะออเดอร์ฝั่งร้านค้า (พร้อมปุ่มลบออกเป็นบางรายการ)
         function renderMerchantOrders() {
             const pendingList = document.getElementById('list-orders-pending');
             const preparingList = document.getElementById('list-orders-preparing');
@@ -1106,12 +1132,17 @@
                 </div>
                 
                 <ul class="space-y-1.5 mb-3">
-                    ${order.items.map(item => `
-                        <li class="flex items-start justify-between text-sm">
-                            <span class="font-medium text-stone-800">
+                    ${order.items.map((item, idx) => `
+                        <li class="flex items-center justify-between gap-2 text-sm bg-stone-50/80 px-2.5 py-1.5 rounded-xl border border-stone-100">
+                            <span class="font-medium text-stone-800 min-w-0 flex-1">
                                 <span class="inline-block w-5 text-amber-700 font-bold">${item.qty}x</span> ${item.name}
                             </span>
-                            <span class="text-stone-500 text-xs">฿${item.price * item.qty}</span>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span class="text-stone-500 text-xs">฿${item.price * item.qty}</span>
+                                <button type="button" onclick="removeOrderItem('${order.id}', ${idx})" title="ลบรายการนี้ออกจากบิล" class="w-6 h-6 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center transition">
+                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
                         </li>
                     `).join('')}
                 </ul>
@@ -1131,6 +1162,61 @@
             </div>
             `;
         }
+
+        // ลบรายการอาหาร/เครื่องดื่มออกเป็นบางรายการในบิลของลูกค้า
+        window.closeConfirmItemDeleteModal = function() {
+            document.getElementById('confirm-item-delete-modal').classList.add('hidden');
+        };
+
+        window.removeOrderItem = function(orderId, itemIndex) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order || !Array.isArray(order.items)) return;
+
+            const targetItem = order.items[itemIndex];
+            if (!targetItem) return;
+
+            const modal = document.getElementById('confirm-item-delete-modal');
+            const textEl = document.getElementById('confirm-item-delete-text');
+            const confirmBtn = document.getElementById('btn-confirm-item-delete');
+
+            textEl.textContent = `ต้องการลบรายการ "${targetItem.name} (${targetItem.qty}x)" ออกจากบิลของ ${order.table} ใช่หรือไม่?`;
+            modal.classList.remove('hidden');
+
+            confirmBtn.onclick = async () => {
+                closeConfirmItemDeleteModal();
+                const updatedItems = order.items.filter((_, idx) => idx !== itemIndex);
+
+                try {
+                    if (updatedItems.length === 0) {
+                        if (db && currentUser) {
+                            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId));
+                        } else {
+                            orders = orders.filter(o => o.id !== orderId);
+                            renderMerchantOrders();
+                            renderCustomerActiveOrders();
+                        }
+                        showToast("🗑️ ลบรายการสุดท้ายแล้ว ยกเลิกบิลเรียบร้อย", "stone");
+                    } else {
+                        const newTotal = updatedItems.reduce((sum, it) => sum + (Number(it.price || 0) * Number(it.qty || 1)), 0);
+                        if (db && currentUser) {
+                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId), {
+                                items: updatedItems,
+                                total: newTotal
+                            });
+                        } else {
+                            order.items = updatedItems;
+                            order.total = newTotal;
+                            renderMerchantOrders();
+                            renderCustomerActiveOrders();
+                        }
+                        showToast(`✅ ลบ "${targetItem.name}" และคำนวณยอดใหม่แล้ว`, "emerald");
+                    }
+                } catch (error) {
+                    console.error("Remove order item error:", error);
+                    showToast("❌ ไม่สามารถลบรายการได้ กรุณาลองใหม่", "red");
+                }
+            };
+        };
 
         window.updateOrderStatus = async function(orderId, newStatus) {
             try {
@@ -1158,6 +1244,15 @@
             generateTableQRCodes();
         };
 
+        window.simulateScanQR = function(tableName) {
+            currentTable = tableName;
+            const selectEl = document.getElementById('customer-table-select');
+            if (selectEl) selectEl.value = tableName;
+            updateCustomerTable(tableName);
+            logoutMerchant();
+            showToast(`📱 จำลองการสแกน QR Code ของ ${tableName}`, 'amber');
+        };
+
         window.generateTableQRCodes = function() {
             const container = document.getElementById('qr-cards-container');
             const tables = ['โต๊ะ 1', 'โต๊ะ 2', 'โต๊ะ 3', 'โต๊ะ 4', 'โต๊ะ 5', 'สั่งกลับบ้าน (Takeaway)'];
@@ -1175,7 +1270,7 @@
             if (warningEl) {
                 if (!baseUrl.startsWith('http')) {
                     warningEl.classList.remove('hidden');
-                    baseUrl = 'https://baansuan-cafe.example.com'; // ลิงก์ตัวอย่างเพื่อให้ QR Code สร้างภาพได้สมบูรณ์
+                    baseUrl = 'https://mmkanokboonma-stack.github.io/Cafe-/';
                 } else {
                     warningEl.classList.add('hidden');
                 }
