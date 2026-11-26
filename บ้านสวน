@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บ้านสวนกาแฟ & พิซซ่าเตาฟืน (บ้านมอเศรษฐี) - ระบบสั่งอาหารและจัดการร้าน</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Kanit & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QRCode.js สำหรับสร้าง QR Code ประจำโต๊ะ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Kanit', 'Inter', sans-serif;
+            background-color: #faf7f2;
+            color: #292524;
+        }
+        /* ซ่อน Scrollbar แต่ยังเลื่อนได้ */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(234, 88, 12, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
+        }
+        .new-order-badge {
+            animation: pulse-ring 2s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- แถบนำทางด้านบน (Navbar) -->
+    <header class="bg-stone-900 text-white sticky top-0 z-40 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+            <!-- กดที่โลโก้ร้านเพื่อเปิดหน้าต่างใส่รหัส PIN เข้าสู่ระบบร้านค้า -->
+            <div onclick="openMerchantAuthModal()" class="flex items-center gap-3 cursor-pointer select-none group" title="สำหรับพนักงาน/เจ้าของร้าน">
+                <div class="bg-amber-600 p-2 rounded-xl group-hover:bg-amber-500 transition">
+                    <i data-lucide="coffee" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-xl font-bold tracking-wide text-amber-500">บ้านสวนกาแฟ & พิซซ่าเตาฟืน</h1>
+                    <p class="text-xs text-stone-400">บ้านมอเศรษฐี</p>
+                </div>
+            </div>
+
+            <!-- แถบสถานะสำหรับฝั่งร้านค้า (จะแสดงเฉพาะเมื่อล็อกอินเข้าโหมดร้านค้าแล้วเท่านั้น) -->
+            <div id="merchant-mode-controls" class="hidden flex items-center gap-2">
+                <span class="text-xs bg-amber-600/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i> โหมดร้านค้า (POS)
+                </span>
+                <button onclick="logoutMerchant()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-800 hover:bg-red-600 text-stone-300 hover:text-white border border-stone-700 transition">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                    <span>ออกจากระบบร้านค้า</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- กล่องแจ้งเตือน (Toast Notification) -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- ========================================== -->
+    <!-- ส่วนที่ 1: หน้าจอฝั่งลูกค้า (Customer View)    -->
+    <!-- ========================================== -->
+    <main id="view-customer" class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 pb-28">
+        
+        <!-- แบนเนอร์แสดงเลขโต๊ะ (จำลองการสแกน QR Code) -->
+        <div class="bg-gradient-to-r from-amber-700 to-stone-800 rounded-2xl p-5 text-white mb-6 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2 text-amber-300 text-sm font-medium mb-1">
+                    <i data-lucide="qr-code" class="w-4 h-4"></i>
+                    <span>สั่งอาหารผ่าน QR Code</span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold">ยินดีต้อนรับสู่ บ้านสวนกาแฟ & พิซซ่าเตาฟืน!</h2>
+                <p class="text-stone-200 text-sm mt-1">บ้านมอเศรษฐี • เลือกเมนูเครื่องดื่มและพิซซ่าอบเตาฟืน แล้วกดสั่งให้ส่งตรงถึงโต๊ะของคุณ</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-xl flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                <span class="text-sm text-amber-200">คุณอยู่ที่:</span>
+                <!-- กรณีสแกน QR Code มา จะล็อกเลขโต๊ะให้อัตโนมัติ -->
+                <div id="locked-table-badge" class="hidden bg-stone-900 text-amber-400 font-bold px-4 py-1.5 rounded-lg border border-amber-500/50 flex items-center gap-1.5">
+                    <i data-lucide="map-pin" class="w-4 h-4"></i>
+                    <span id="locked-table-text">โต๊ะ 1</span>
+                </div>
+                <select id="customer-table-select" onchange="updateCustomerTable(this.value)" class="bg-stone-900 text-white font-bold px-3 py-1.5 rounded-lg border border-amber-500/50 focus:outline-none">
+                    <option value="โต๊ะ 1">โต๊ะ 1</option>
+                    <option value="โต๊ะ 2">โต๊ะ 2</option>
+                    <option value="โต๊ะ 3">โต๊ะ 3</option>
+                    <option value="โต๊ะ 4">โต๊ะ 4</option>
+                    <option value="โต๊ะ 5">โต๊ะ 5</option>
+                    <option value="สั่งกลับบ้าน (Takeaway)">สั่งกลับบ้าน</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- หมวดหมู่เมนูและช่องค้นหา -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
+            <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                <button onclick="filterCategory('all')" id="cat-all" class="cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-stone-900 text-white shadow-sm transition">
+                    ทั้งหมด
+                </button>
+                <button onclick="filterCategory('coffee')" id="cat-coffee" class="cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-white text-stone-700 hover:bg-stone-100 border border-stone-200 transition flex items-center gap-1.5">
+                    <i data-lucide="cup-soda" class="w-4 h-4 text-amber-600"></i> เครื่องดื่ม & กาแฟ
+                </button>
+                <button onclick="filterCategory('pizza')" id="cat-pizza" class="cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-white text-stone-700 hover:bg-stone-100 border border-stone-200 transition flex items-center gap-1.5">
+                    <i data-lucide="pizza" class="w-4 h-4 text-orange-600"></i> พิซซ่า & ของทานเล่น
+                </button>
+            </div>
+
+            <div class="relative">
+                <i data-lucide="search" class="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                <input type="text" id="customer-search" oninput="renderCustomerMenu()" placeholder="ค้นหาเมนู..." class="w-full sm:w-64 pl-10 pr-4 py-2 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+            </div>
+        </div>
+
+        <!-- รายการเมนูอาหาร (Grid) -->
+        <div id="customer-menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <!-- จะถูกเติมด้วย JavaScript -->
+        </div>
+
+        <!-- แถบติดตามสถานะออเดอร์ล่าสุดของโต๊ะนี้ -->
+        <div id="customer-active-orders" class="mt-10 hidden">
+            <h3 class="text-lg font-bold text-stone-800 mb-3 flex items-center gap-2">
+                <i data-lucide="clock" class="w-5 h-5 text-amber-600"></i>
+                รายการที่สั่งไปแล้ว (<span id="active-order-table-label">โต๊ะ 1</span>)
+            </h3>
+            <div id="customer-orders-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+
+        <!-- ปุ่มตะกร้าสินค้าลอยด้านล่าง (Floating Cart Bar) -->
+        <div id="floating-cart-bar" class="fixed bottom-4 left-4 right-4 max-w-3xl mx-auto bg-stone-900 text-white p-4 rounded-2xl shadow-2xl border border-stone-700 flex items-center justify-between transition-transform duration-300 translate-y-32 z-30">
+            <div class="flex items-center gap-3">
+                <div class="relative bg-amber-600 p-2.5 rounded-xl">
+                    <i data-lucide="shopping-bag" class="w-6 h-6 text-white"></i>
+                    <span id="cart-badge-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
+                </div>
+                <div>
+                    <p class="text-xs text-stone-400">ยอดรวมตะกร้า (<span id="cart-table-name">โต๊ะ 1</span>)</p>
+                    <p class="text-lg font-bold text-amber-400">฿<span id="cart-total-price">0</span></p>
+                </div>
+            </div>
+            <button onclick="openCartModal()" class="bg-amber-600 hover:bg-amber-500 text-white font-semibold px-6 py-2.5 rounded-xl transition flex items-center gap-2 shadow-lg">
+                <span>ดูตะกร้า & สั่งเลย</span>
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </main>
+
+    <!-- ========================================== -->
+    <!-- Modal: ตะกร้าสินค้าฝั่งลูกค้า (Cart Modal)     -->
+    <!-- ========================================== -->
+    <div id="cart-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-5 bg-stone-900 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i data-lucide="shopping-bag" class="w-5 h-5 text-amber-500"></i>
+                    <h3 class="font-bold text-lg">รายการที่เลือก (<span id="modal-table-label">โต๊ะ 1</span>)</h3>
+                </div>
+                <button onclick="closeCartModal()" class="p-1.5 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div id="cart-items-container" class="p-5 overflow-y-auto flex-1 space-y-3">
+                <!-- รายการในตะกร้า -->
+            </div>
+
+            <div class="p-5 bg-stone-50 border-t border-stone-200 space-y-4">
+                <div>
+                    <label class="text-xs font-medium text-stone-500 block mb-1">หมายเหตุถึงร้านค้า (เช่น หวานน้อย, ไม่ใส่ผัก)</label>
+                    <input type="text" id="order-note" placeholder="ระบุรายละเอียดเพิ่มเติม..." class="w-full px-3.5 py-2 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                </div>
+                <div class="flex items-center justify-between text-lg font-bold">
+                    <span>ยอดชำระทั้งหมด</span>
+                    <span class="text-amber-700 text-2xl">฿<span id="modal-total-price">0</span></span>
+                </div>
+                <button onclick="submitOrder()" id="btn-submit-order" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base">
+                    <i data-lucide="send" class="w-5 h-5"></i>
+                    <span>ยืนยันส่งออเดอร์เข้าครัวทันที</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ส่วนที่ 2: หน้าจอฝั่งร้านค้า (Merchant POS)   -->
+    <!-- ========================================== -->
+    <main id="view-merchant" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 py-6">
+        
+        <!-- เมนูย่อยฝั่งร้านค้า -->
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white p-3 rounded-2xl shadow-sm border border-stone-200">
+            <div class="flex flex-wrap gap-2">
+                <button onclick="switchMerchantTab('orders')" id="tab-merchant-orders" class="merchant-tab px-4 py-2 rounded-xl font-medium text-sm bg-stone-900 text-white flex items-center gap-2">
+                    <i data-lucide="bell-ring" class="w-4 h-4 text-amber-400"></i>
+                    <span>ออเดอร์เข้าใหม่</span>
+                    <span id="pending-orders-count" class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+                </button>
+                <button onclick="switchMerchantTab('menu')" id="tab-merchant-menu" class="merchant-tab px-4 py-2 rounded-xl font-medium text-sm bg-stone-100 text-stone-700 hover:bg-stone-200 flex items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-4 h-4 text-amber-600"></i>
+                    <span>จัดการเมนู & เพิ่มรูปภาพ</span>
+                </button>
+                <button onclick="switchMerchantTab('qr')" id="tab-merchant-qr" class="merchant-tab px-4 py-2 rounded-xl font-medium text-sm bg-stone-100 text-stone-700 hover:bg-stone-200 flex items-center gap-2">
+                    <i data-lucide="qr-code" class="w-4 h-4 text-stone-600"></i>
+                    <span>QR Code ประจำโต๊ะ</span>
+                </button>
+            </div>
+            <div class="text-xs text-stone-500 flex items-center gap-1.5 px-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                เชื่อมต่อระบบรับออเดอร์สด
+            </div>
+        </div>
+
+        <!-- แท็บย่อย 2.1: กระดานรับออเดอร์แบบเรียลไทม์ -->
+        <section id="merchant-section-orders" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- คอลัมน์: ออเดอร์ใหม่ -->
+                <div class="bg-stone-100/80 p-4 rounded-2xl border border-stone-200">
+                    <h3 class="font-bold text-stone-800 mb-3 flex items-center justify-between">
+                        <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500"></span> รอรับออเดอร์</span>
+                        <span id="count-pending" class="text-xs bg-white px-2.5 py-1 rounded-lg border font-semibold">0</span>
+                    </h3>
+                    <div id="list-orders-pending" class="space-y-3"></div>
+                </div>
+
+                <!-- คอลัมน์: กำลังทำ -->
+                <div class="bg-stone-100/80 p-4 rounded-2xl border border-stone-200">
+                    <h3 class="font-bold text-stone-800 mb-3 flex items-center justify-between">
+                        <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-500"></span> กำลังชง / อบพิซซ่า</span>
+                        <span id="count-preparing" class="text-xs bg-white px-2.5 py-1 rounded-lg border font-semibold">0</span>
+                    </h3>
+                    <div id="list-orders-preparing" class="space-y-3"></div>
+                </div>
+
+                <!-- คอลัมน์: เสิร์ฟแล้ว -->
+                <div class="bg-stone-100/80 p-4 rounded-2xl border border-stone-200">
+                    <h3 class="font-bold text-stone-800 mb-3 flex items-center justify-between">
+                        <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> เสิร์ฟเรียบร้อย</span>
+                        <span id="count-completed" class="text-xs bg-white px-2.5 py-1 rounded-lg border font-semibold">0</span>
+                    </h3>
+                    <div id="list-orders-completed" class="space-y-3 max-h-[600px] overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- แท็บย่อย 2.2: เพิ่มเมนูใหม่พร้อมรูปภาพและราคา -->
+        <section id="merchant-section-menu" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- ฟอร์มเพิ่มเมนูใหม่ -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 h-fit">
+                    <h3 class="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="plus-square" class="w-5 h-5 text-amber-600"></i>
+                        เพิ่มเมนูใหม่เข้าร้าน
+                    </h3>
+                    <form id="add-menu-form" onsubmit="handleAddMenu(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-stone-700 mb-1">ชื่อเมนู *</label>
+                            <input type="text" id="menu-name" required placeholder="เช่น ลาเต้เย็น, พิซซ่าฮาวายเอี้ยน" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-stone-700 mb-1">หมวดหมู่ *</label>
+                                <select id="menu-category" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600 bg-white">
+                                    <option value="coffee">เครื่องดื่ม & กาแฟ</option>
+                                    <option value="pizza">พิซซ่า & ของทานเล่น</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-stone-700 mb-1">ราคา (บาท) *</label>
+                                <input type="number" id="menu-price" required min="1" placeholder="85" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-stone-700 mb-1">คำอธิบายสั้นๆ</label>
+                            <input type="text" id="menu-desc" placeholder="เช่น เมล็ดกาแฟคั่วกลาง หอมนุ่มละมุน" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                        </div>
+
+                        <!-- อัปโหลดรูปภาพหรือใส่ URL -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-stone-700">รูปภาพเมนู</label>
+                            <div class="border-2 border-dashed border-stone-300 rounded-xl p-4 text-center hover:bg-stone-50 transition cursor-pointer relative" onclick="document.getElementById('menu-image-file').click()">
+                                <input type="file" id="menu-image-file" accept="image/*" class="hidden" onchange="previewImageUpload(event)">
+                                <div id="image-preview-placeholder" class="space-y-1">
+                                    <i data-lucide="image-plus" class="w-8 h-8 text-stone-400 mx-auto"></i>
+                                    <p class="text-xs text-stone-600 font-medium">คลิกเพื่อเลือกรูปภาพจากเครื่อง</p>
+                                    <p class="text-[11px] text-stone-400">รองรับไฟล์ JPG, PNG (ย่อขนาดอัตโนมัติ)</p>
+                                </div>
+                                <img id="image-preview-img" class="hidden w-full h-40 object-cover rounded-lg mx-auto" alt="Preview">
+                            </div>
+                            <div class="text-center text-xs text-stone-400">หรือวางลิงก์รูปภาพ (Image URL)</div>
+                            <input type="url" id="menu-image-url" oninput="previewImageUrl(this.value)" placeholder="https://example.com/pizza.jpg" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-xs focus:outline-none focus:border-amber-600">
+                        </div>
+
+                        <button type="submit" class="w-full bg-stone-900 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span>บันทึกเมนูใหม่</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- รายการเมนูทั้งหมดในร้าน -->
+                <div class="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-stone-900">รายการเมนูทั้งหมดในร้าน (<span id="merchant-menu-count">0</span>)</h3>
+                    </div>
+                    <div id="merchant-menu-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[650px] overflow-y-auto pr-1">
+                        <!-- เติมด้วย JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- แท็บย่อย 2.3: QR Code ประจำโต๊ะ -->
+        <section id="merchant-section-qr" class="hidden">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <div class="max-w-2xl mb-6">
+                    <h3 class="text-xl font-bold text-stone-900 flex items-center gap-2">
+                        <i data-lucide="qr-code" class="w-6 h-6 text-amber-600"></i>
+                        QR Code สำหรับวางบนโต๊ะลูกค้า
+                    </h3>
+                    <p class="text-sm text-stone-600 mt-1">
+                        ลูกค้าสามารถใช้กล้องมือถือสแกน QR Code ด้านล่างเพื่อเปิดหน้าสั่งอาหารของโต๊ะนั้นๆ ได้ทันที หรือกดปุ่ม <strong>"ทดลองสแกนโต๊ะนี้"</strong> เพื่อทดสอบสั่งอาหารจากฝั่งลูกค้า
+                    </p>
+                </div>
+
+                <!-- กล่องตั้งค่า URL เว็บไซต์จริงของร้าน -->
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
+                    <label class="block text-xs font-bold text-amber-900 mb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="globe" class="w-4 h-4 text-amber-600"></i>
+                        ลิงก์เว็บไซต์ของร้าน (สำหรับฝังใน QR Code ให้มือถือสแกนได้จริง)
+                    </label>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input type="url" id="qr-base-url-input" oninput="generateTableQRCodes()" placeholder="เช่น https://baansuan-cafe.netlify.app" class="flex-1 px-3.5 py-2 bg-white border border-amber-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                        <button type="button" onclick="resetQrBaseUrl()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-xl transition shrink-0">
+                            ใช้ลิงก์หน้าเว็บปัจจุบัน
+                        </button>
+                    </div>
+                    <p id="qr-url-warning" class="text-xs text-red-600 mt-2 hidden flex items-center gap-1">
+                        <i data-lucide="alert-triangle" class="w-3.5 h-3.5 shrink-0"></i>
+                        <span>ตอนนี้คุณกำลังเปิดในโหมดทดสอบ (Preview) กล้องมือถือจริงจะยังสแกนไม่ได้จนกว่าจะนำไฟล์ไปอัปโหลดขึ้นเว็บโฮสติ้ง (เช่น Netlify) เพื่อให้ได้ลิงก์ https://... ครับ</span>
+                    </p>
+                </div>
+
+                <div id="qr-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    <!-- การ์ด QR Code ของแต่ละโต๊ะ -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- Modal: ใส่รหัส PIN เข้าสู่ระบบฝั่งร้านค้า    -->
+    <!-- ========================================== -->
+    <div id="merchant-pin-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden p-6 text-center">
+            <div class="w-14 h-14 bg-stone-900 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md">
+                <i data-lucide="lock" class="w-7 h-7"></i>
+            </div>
+            <h3 class="text-xl font-bold text-stone-900">เข้าสู่ระบบจัดการร้านค้า</h3>
+            <p class="text-xs text-stone-500 mt-1 mb-5">กรุณากรอกรหัส PIN 4 หลักสำหรับพนักงาน/เจ้าของร้าน<br><span class="text-amber-600">(รหัสเริ่มต้น: 1234)</span></p>
+            
+            <form onsubmit="verifyMerchantPin(event)" class="space-y-4">
+                <input type="password" id="merchant-pin-input" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="••••" required
+                    class="w-full text-center text-2xl tracking-[0.5em] font-bold py-3 bg-stone-100 border border-stone-300 rounded-2xl focus:outline-none focus:border-amber-600 focus:bg-white">
+                <p id="pin-error-msg" class="text-xs text-red-500 hidden">รหัส PIN ไม่ถูกต้อง กรุณาลองใหม่</p>
+                
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="closeMerchantAuthModal()" class="flex-1 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-sm transition">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-stone-900 hover:bg-amber-600 text-white font-semibold text-sm transition shadow">
+                        เข้าสู่ระบบ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Firebase & Application Logic               -->
+    <!-- ========================================== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ตั้งค่า Firebase จาก Environment
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'brew-and-crust-pos';
+        
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+
+        // สถานะของแอปพลิเคชัน (State)
+        let menuItems = [];
+        let orders = [];
+        let cart = [];
+        let currentCategory = 'all';
+        let currentTable = 'โต๊ะ 1';
+        let uploadedImageBase64 = '';
+        let isFirstOrderLoad = true;
+        let isMerchantAuthenticated = false;
+        const MERCHANT_PIN = "1234"; // รหัส PIN สำหรับเข้าสู่หน้าจัดการร้านค้า
+
+        // เมนูเริ่มต้น (กรณีเปิดร้านครั้งแรก)
+        const defaultMenus = [
+            {
+                name: "เอสเปรสโซ่เย็น (Iced Espresso)",
+                category: "coffee",
+                price: 65,
+                desc: "กาแฟคั่วเข้มหอมกรุ่น รสชาติกลมกล่อมสไตล์ไทย",
+                image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                name: "คาราเมลมัคคิอาโต้ (Caramel Macchiato)",
+                category: "coffee",
+                price: 85,
+                desc: "นมสดฟองนุ่มราดซอสคาราเมลหอมหวานตัดกับช็อตเอสเปรสโซ่",
+                image: "https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                name: "มัทฉะลาเต้เย็น (Iced Matcha Latte)",
+                category: "coffee",
+                price: 90,
+                desc: "ผงมัทฉะแท้จากญี่ปุ่นชงกับนมสดแท้ หอมละมุน",
+                image: "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                name: "พิซซ่าเปปเปอโรนีชีส (Pepperoni Pizza)",
+                category: "pizza",
+                price: 249,
+                desc: "แป้งโฮมเมดอบเตาถ่าน หน้าเปปเปอโรนีและมอสซาเรลล่าชีสเยิ้มๆ",
+                image: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                name: "พิซซ่าฮาวายเอี้ยน (Hawaiian Pizza)",
+                category: "pizza",
+                price: 239,
+                desc: "แฮมรมควันชิ้นโต สับปะรดฉ่ำๆ และซอสมะเขือเทศสูตรพิเศษ",
+                image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                name: "พิซซ่าทรัฟเฟิลเห็ดรวม (Truffle Mushroom)",
+                category: "pizza",
+                price: 289,
+                desc: "ซอสครีมเห็ดทรัฟเฟิลหอมกรุ่น โรยพาเมซานชีสและเห็ดแชมปิญอง",
+                image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+            }
+        ];
+
+        // ตรวจสอบพารามิเตอร์จาก URL (เช่น ?table=โต๊ะ%202 เมื่อสแกน QR Code หรือ ?mode=pos สำหรับร้านค้า)
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tableParam = urlParams.get('table');
+            const modeParam = urlParams.get('mode');
+
+            if (tableParam) {
+                currentTable = tableParam;
+                const selectEl = document.getElementById('customer-table-select');
+                const lockedBadge = document.getElementById('locked-table-badge');
+                const lockedText = document.getElementById('locked-table-text');
+                
+                // ซ่อนตัวเลือกเปลี่ยนโต๊ะ และล็อกเป็นเลขโต๊ะที่สแกนมา
+                selectEl.classList.add('hidden');
+                lockedBadge.classList.remove('hidden');
+                lockedText.textContent = tableParam;
+                
+                updateCustomerTable(tableParam);
+            }
+
+            if (modeParam === 'pos') {
+                openMerchantAuthModal();
+            }
+        }
+
+        // เริ่มต้นการทำงานของระบบ
+        async function initApp() {
+            lucide.createIcons();
+            checkUrlParams();
+            generateTableQRCodes();
+
+            if (firebaseConfig) {
+                try {
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            currentUser = user;
+                            await setupFirestoreListeners();
+                        }
+                    });
+                } catch (error) {
+                    console.error("Firebase Init Error:", error);
+                    fallbackToLocalState();
+                }
+            } else {
+                fallbackToLocalState();
+            }
+        }
+
+        // กรณีไม่มี Firebase Config ให้ทำงานในหน่วยความจำชั่วคราวได้
+        function fallbackToLocalState() {
+            menuItems = defaultMenus.map((m, idx) => ({ id: 'local_' + idx, ...m }));
+            renderAll();
+        }
+
+        // เชื่อมต่อข้อมูลแบบ Real-time กับ Firestore
+        async function setupFirestoreListeners() {
+            if (!currentUser || !db) return;
+
+            const menuColRef = collection(db, 'artifacts', appId, 'public', 'data', 'menu_items');
+            const ordersColRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+
+            // 1. ตรวจสอบและเพิ่มเมนูเริ่มต้นหากยังว่างเปล่า
+            try {
+                const snapshot = await getDocs(menuColRef);
+                if (snapshot.empty) {
+                    for (const item of defaultMenus) {
+                        await addDoc(menuColRef, item);
+                    }
+                }
+            } catch (err) {
+                console.error("Error seeding default menu:", err);
+            }
+
+            // 2. ฟังการเปลี่ยนแปลงของเมนู (Real-time Menu)
+            onSnapshot(menuColRef, (snapshot) => {
+                menuItems = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                renderCustomerMenu();
+                renderMerchantMenu();
+            }, (error) => {
+                console.error("Menu snapshot error:", error);
+            });
+
+            // 3. ฟังการเปลี่ยนแปลงของออเดอร์ (Real-time Orders)
+            onSnapshot(ordersColRef, (snapshot) => {
+                const newOrders = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                // เรียงลำดับตามเวลาล่าสุด
+                newOrders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+                // แจ้งเตือนเสียง/ข้อความเมื่อมีออเดอร์ใหม่เด้งเข้ามา
+                // แจ้งเตือนเสียง/ข้อความเมื่อมีออเดอร์ใหม่เด้งเข้ามา (เฉพาะเมื่ออยู่ในโหมดร้านค้า)
+                if (!isFirstOrderLoad && newOrders.length > orders.length && isMerchantAuthenticated) {
+                    const latest = newOrders[0];
+                    if (latest && latest.status === 'pending') {
+                        playNotificationBeep();
+                        showToast(`🔔 ออเดอร์ใหม่จาก ${latest.table}! (${latest.items.length} รายการ)`, 'amber');
+                    }
+                }
+
+                orders = newOrders;
+                isFirstOrderLoad = false;
+                renderMerchantOrders();
+                renderCustomerActiveOrders();
+            }, (error) => {
+                console.error("Orders snapshot error:", error);
+            });
+        }
+
+        // เสียงแจ้งเตือนเบาๆ ด้วย Web Audio API เมื่อมีออเดอร์เข้า
+        function playNotificationBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime); // โน้ต A5
+                osc.frequency.setValueAtTime(1108.73, ctx.currentTime + 0.15); // โน้ต C#6
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.5);
+            } catch (e) {
+                // ข้ามหากเบราว์เซอร์บล็อกเสียงอัตโนมัติ
+            }
+        }
+
+        // ==========================================
+        // ฟังก์ชันจัดการ UI และการสลับหน้าจอ (ป้องกันลูกค้าเข้าถึงฝั่งร้านค้า)
+        // ==========================================
+        window.openMerchantAuthModal = function() {
+            if (isMerchantAuthenticated) {
+                switchMode('merchant');
+                return;
+            }
+            document.getElementById('merchant-pin-input').value = '';
+            document.getElementById('pin-error-msg').classList.add('hidden');
+            document.getElementById('merchant-pin-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('merchant-pin-input').focus(), 100);
+        };
+
+        window.closeMerchantAuthModal = function() {
+            document.getElementById('merchant-pin-modal').classList.add('hidden');
+        };
+
+        window.verifyMerchantPin = function(event) {
+            event.preventDefault();
+            const inputPin = document.getElementById('merchant-pin-input').value;
+            if (inputPin === MERCHANT_PIN) {
+                isMerchantAuthenticated = true;
+                closeMerchantAuthModal();
+                switchMode('merchant');
+                showToast("🔓 เข้าสู่ระบบจัดการร้านค้าเรียบร้อย", "emerald");
+            } else {
+                document.getElementById('pin-error-msg').classList.remove('hidden');
+                document.getElementById('merchant-pin-input').value = '';
+                document.getElementById('merchant-pin-input').focus();
+            }
+        };
+
+        window.logoutMerchant = function() {
+            isMerchantAuthenticated = false;
+            switchMode('customer');
+            showToast("🔒 ออกจากระบบร้านค้าแล้ว", "stone");
+        };
+
+        window.switchMode = function(mode) {
+            const customerView = document.getElementById('view-customer');
+            const merchantView = document.getElementById('view-merchant');
+            const merchantControls = document.getElementById('merchant-mode-controls');
+
+            if (mode === 'customer') {
+                customerView.classList.remove('hidden');
+                merchantView.classList.add('hidden');
+                merchantControls.classList.add('hidden');
+                updateFloatingCart();
+            } else if (mode === 'merchant' && isMerchantAuthenticated) {
+                customerView.classList.add('hidden');
+                merchantView.classList.remove('hidden');
+                merchantControls.classList.remove('hidden');
+                document.getElementById('floating-cart-bar').classList.add('translate-y-32');
+            }
+            lucide.createIcons();
+        };
+
+        window.switchMerchantTab = function(tab) {
+            ['orders', 'menu', 'qr'].forEach(t => {
+                document.getElementById(`merchant-section-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`tab-merchant-${t}`);
+                btn.className = "merchant-tab px-4 py-2 rounded-xl font-medium text-sm bg-stone-100 text-stone-700 hover:bg-stone-200 flex items-center gap-2";
+            });
+            document.getElementById(`merchant-section-${tab}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-merchant-${tab}`);
+            activeBtn.className = "merchant-tab px-4 py-2 rounded-xl font-medium text-sm bg-stone-900 text-white flex items-center gap-2";
+            lucide.createIcons();
+        };
+
+        // ==========================================
+        // ฟังก์ชันฝั่งลูกค้า (Customer Functions)
+        // ==========================================
+        window.updateCustomerTable = function(tableName) {
+            currentTable = tableName;
+            document.getElementById('cart-table-name').textContent = tableName;
+            document.getElementById('modal-table-label').textContent = tableName;
+            document.getElementById('active-order-table-label').textContent = tableName;
+            renderCustomerActiveOrders();
+        };
+
+        window.filterCategory = function(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.className = "cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-white text-stone-700 hover:bg-stone-100 border border-stone-200 transition flex items-center gap-1.5";
+            });
+            const activeBtn = document.getElementById(`cat-${cat}`);
+            activeBtn.className = "cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-stone-900 text-white shadow-sm transition flex items-center gap-1.5";
+            renderCustomerMenu();
+        };
+
+        window.renderCustomerMenu = function() {
+            const grid = document.getElementById('customer-menu-grid');
+            const searchQuery = document.getElementById('customer-search').value.toLowerCase();
+
+            const filtered = menuItems.filter(item => {
+                const matchCat = currentCategory === 'all' || item.category === currentCategory;
+                const matchSearch = item.name.toLowerCase().includes(searchQuery) || (item.desc && item.desc.toLowerCase().includes(searchQuery));
+                return matchCat && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-stone-400">ไม่พบเมนูที่ค้นหา</div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(item => {
+                const inCart = cart.find(c => c.id === item.id);
+                const qty = inCart ? inCart.qty : 0;
+                const fallbackImg = item.category === 'pizza' 
+                    ? 'https://placehold.co/600x400/ea580c/ffffff?text=Pizza' 
+                    : 'https://placehold.co/600x400/78350f/ffffff?text=Coffee';
+
+                return `
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-stone-200/80 flex flex-col">
+                    <div class="relative h-44 bg-stone-100 overflow-hidden">
+                        <img src="${item.image || fallbackImg}" onerror="this.src='${fallbackImg}'" alt="${item.name}" class="w-full h-full object-cover hover:scale-105 transition duration-300">
+                        <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-semibold backdrop-blur-md ${item.category === 'pizza' ? 'bg-orange-600/90 text-white' : 'bg-stone-900/80 text-amber-300'}">
+                            ${item.category === 'pizza' ? '🍕 พิซซ่า' : '☕ เครื่องดื่ม'}
+                        </span>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-stone-800 text-base line-clamp-1">${item.name}</h3>
+                            <p class="text-xs text-stone-500 mt-1 line-clamp-2">${item.desc || 'ปรุงสดใหม่แก้วต่อแก้ว / ถาดต่อถาด'}</p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between">
+                            <span class="text-lg font-bold text-amber-700">฿${item.price}</span>
+                            
+                            ${qty === 0 ? `
+                                <button onclick="addToCart('${item.id}')" class="bg-stone-900 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1 shadow-sm">
+                                    <i data-lucide="plus" class="w-4 h-4"></i> เพิ่มลงตะกร้า
+                                </button>
+                            ` : `
+                                <div class="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl p-1">
+                                    <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 rounded-lg bg-white text-stone-800 font-bold shadow-sm hover:bg-stone-100 flex items-center justify-center">-</button>
+                                    <span class="font-bold text-sm w-5 text-center text-amber-900">${qty}</span>
+                                    <button onclick="updateCartQty('${item.id}', 1)" class="w-7 h-7 rounded-lg bg-amber-600 text-white font-bold shadow-sm hover:bg-amber-700 flex items-center justify-center">+</button>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        };
+
+        window.addToCart = function(itemId) {
+            const item = menuItems.find(m => m.id === itemId);
+            if (!item) return;
+
+            const existing = cart.find(c => c.id === itemId);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ ...item, qty: 1 });
+            }
+            renderCustomerMenu();
+            updateFloatingCart();
+            showToast(`เพิ่ม "${item.name}" ลงตะกร้าแล้ว`, 'stone');
+        };
+
+        window.updateCartQty = function(itemId, delta) {
+            const idx = cart.findIndex(c => c.id === itemId);
+            if (idx === -1) return;
+
+            cart[idx].qty += delta;
+            if (cart[idx].qty <= 0) {
+                cart.splice(idx, 1);
+            }
+            renderCustomerMenu();
+            updateFloatingCart();
+            renderCartModalItems();
+        };
+
+        function updateFloatingCart() {
+            const bar = document.getElementById('floating-cart-bar');
+            const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+            document.getElementById('cart-badge-count').textContent = totalQty;
+            document.getElementById('cart-total-price').textContent = totalPrice.toLocaleString();
+            document.getElementById('modal-total-price').textContent = totalPrice.toLocaleString();
+
+            if (totalQty > 0 && !document.getElementById('view-customer').classList.contains('hidden')) {
+                bar.classList.remove('translate-y-32');
+            } else {
+                bar.classList.add('translate-y-32');
+            }
+        }
+
+        window.openCartModal = function() {
+            renderCartModalItems();
+            document.getElementById('cart-modal').classList.remove('hidden');
+        };
+
+        window.closeCartModal = function() {
+            document.getElementById('cart-modal').classList.add('hidden');
+        };
+
+        function renderCartModalItems() {
+            const container = document.getElementById('cart-items-container');
+            if (cart.length === 0) {
+                container.innerHTML = `<p class="text-center text-stone-400 py-8">ยังไม่มีรายการในตะกร้า</p>`;
+                closeCartModal();
+                return;
+            }
+
+            container.innerHTML = cart.map(item => `
+                <div class="flex items-center justify-between gap-3 bg-stone-50 p-3 rounded-2xl border border-stone-200/70">
+                    <div class="flex items-center gap-3">
+                        <img src="${item.image}" class="w-14 h-14 rounded-xl object-cover bg-stone-200">
+                        <div>
+                            <h4 class="font-bold text-sm text-stone-800">${item.name}</h4>
+                            <p class="text-xs text-amber-700 font-semibold">฿${item.price} x ${item.qty} = ฿${item.price * item.qty}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="updateCartQty('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-white border border-stone-300 font-bold hover:bg-stone-100">-</button>
+                        <span class="font-bold text-sm w-5 text-center">${item.qty}</span>
+                        <button onclick="updateCartQty('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-stone-900 text-white font-bold hover:bg-stone-700">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ส่งออเดอร์เข้าสู่ระบบร้านค้า
+        window.submitOrder = async function() {
+            if (cart.length === 0) return;
+
+            const btn = document.getElementById('btn-submit-order');
+            btn.disabled = true;
+            btn.innerHTML = `<span>กำลังส่งออเดอร์...</span>`;
+
+            const note = document.getElementById('order-note').value.trim();
+            const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+            const orderData = {
+                table: currentTable,
+                items: cart.map(c => ({ id: c.id, name: c.name, price: c.price, qty: c.qty, category: c.category })),
+                total: totalAmount,
+                note: note,
+                status: 'pending', // pending -> preparing -> completed
+                createdAt: Date.now(),
+                timeString: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+            };
+
+            try {
+                if (db && currentUser) {
+                    const ordersColRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+                    await addDoc(ordersColRef, orderData);
+                } else {
+                    orders.unshift({ id: 'ord_' + Date.now(), ...orderData });
+                    renderMerchantOrders();
+                    renderCustomerActiveOrders();
+                }
+
+                cart = [];
+                document.getElementById('order-note').value = '';
+                closeCartModal();
+                renderCustomerMenu();
+                updateFloatingCart();
+                showToast(`✅ ส่งออเดอร์ของ ${currentTable} เรียบร้อยแล้ว!`, 'emerald');
+            } catch (error) {
+                console.error("Order submit error:", error);
+                showToast("❌ เกิดข้อผิดพลาดในการส่งออเดอร์", 'red');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="send" class="w-5 h-5"></i><span>ยืนยันส่งออเดอร์เข้าครัวทันที</span>`;
+                lucide.createIcons();
+            }
+        };
+
+        function renderCustomerActiveOrders() {
+            const section = document.getElementById('customer-active-orders');
+            const list = document.getElementById('customer-orders-list');
+            const tableOrders = orders.filter(o => o.table === currentTable);
+
+            if (tableOrders.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            list.innerHTML = tableOrders.map(ord => {
+                let statusBadge = '';
+                if (ord.status === 'pending') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">⏳ รอร้านรับออเดอร์</span>`;
+                } else if (ord.status === 'preparing') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">🔥 กำลังชง / อบพิซซ่า</span>`;
+                } else {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">✅ เสิร์ฟแล้ว</span>`;
+                }
+
+                return `
+                <div class="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs text-stone-400">สั่งเมื่อ ${ord.timeString || ''} น.</span>
+                        ${statusBadge}
+                    </div>
+                    <ul class="text-sm text-stone-700 space-y-1 mb-2">
+                        ${ord.items.map(i => `<li class="flex justify-between"><span>${i.name} x${i.qty}</span><span>฿${i.price * i.qty}</span></li>`).join('')}
+                    </ul>
+                    <div class="pt-2 border-t border-stone-100 flex justify-between font-bold text-sm">
+                        <span>รวมทั้งสิ้น</span>
+                        <span class="text-amber-700">฿${ord.total}</span>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // ==========================================
+        // ฟังก์ชันฝั่งร้านค้า (Merchant Functions)
+        // ==========================================
+        
+        // 1. การจัดการอัปโหลดรูปภาพและบีบอัดขนาด (เพื่อเก็บใน Firestore ได้อย่างรวดเร็ว)
+        window.previewImageUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // ย่อขนาดรูปภาพให้ไม่เกิน 600px เพื่อประหยัดพื้นที่และโหลดไว
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 600;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height && width > maxDim) {
+                        height *= maxDim / width;
+                        width = maxDim;
+                    } else if (height > maxDim) {
+                        width *= maxDim / height;
+                        height = maxDim;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    uploadedImageBase64 = canvas.toDataURL('image/jpeg', 0.75);
+                    
+                    const previewImg = document.getElementById('image-preview-img');
+                    previewImg.src = uploadedImageBase64;
+                    previewImg.classList.remove('hidden');
+                    document.getElementById('image-preview-placeholder').classList.add('hidden');
+                    document.getElementById('menu-image-url').value = '';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.previewImageUrl = function(url) {
+            if (url.trim()) {
+                uploadedImageBase64 = '';
+                const previewImg = document.getElementById('image-preview-img');
+                previewImg.src = url;
+                previewImg.classList.remove('hidden');
+                document.getElementById('image-preview-placeholder').classList.add('hidden');
+            }
+        };
+
+        // 2. เพิ่มเมนูใหม่เข้าฐานข้อมูล
+        window.handleAddMenu = async function(event) {
+            event.preventDefault();
+            const name = document.getElementById('menu-name').value.trim();
+            const category = document.getElementById('menu-category').value;
+            const price = Number(document.getElementById('menu-price').value);
+            const desc = document.getElementById('menu-desc').value.trim();
+            const urlInput = document.getElementById('menu-image-url').value.trim();
+
+            const finalImage = uploadedImageBase64 || urlInput || (
+                category === 'pizza' 
+                ? 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80'
+                : 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80'
+            );
+
+            const newItem = { name, category, price, desc, image: finalImage };
+
+            try {
+                if (db && currentUser) {
+                    const menuColRef = collection(db, 'artifacts', appId, 'public', 'data', 'menu_items');
+                    await addDoc(menuColRef, newItem);
+                } else {
+                    menuItems.push({ id: 'local_' + Date.now(), ...newItem });
+                    renderCustomerMenu();
+                    renderMerchantMenu();
+                }
+
+                // รีเซ็ตฟอร์ม
+                document.getElementById('add-menu-form').reset();
+                uploadedImageBase64 = '';
+                document.getElementById('image-preview-img').classList.add('hidden');
+                document.getElementById('image-preview-placeholder').classList.remove('hidden');
+                showToast(`✅ เพิ่มเมนู "${name}" เรียบร้อยแล้ว!`, 'emerald');
+            } catch (error) {
+                console.error("Add menu error:", error);
+                showToast("❌ ไม่สามารถเพิ่มเมนูได้ กรุณาลองใหม่", 'red');
+            }
+        };
+
+        // 3. ลบเมนูออกจากร้าน
+        window.deleteMenuItem = async function(itemId) {
+            try {
+                if (db && currentUser) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId);
+                    await deleteDoc(docRef);
+                } else {
+                    menuItems = menuItems.filter(m => m.id !== itemId);
+                    renderCustomerMenu();
+                    renderMerchantMenu();
+                }
+                showToast("🗑️ ลบเมนูออกจากรายการแล้ว", 'stone');
+            } catch (error) {
+                console.error("Delete menu error:", error);
+            }
+        };
+
+        function renderMerchantMenu() {
+            const list = document.getElementById('merchant-menu-list');
+            document.getElementById('merchant-menu-count').textContent = menuItems.length;
+
+            list.innerHTML = menuItems.map(item => `
+                <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-stone-200 bg-stone-50/50">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover shrink-0 bg-stone-200">
+                        <div class="min-w-0">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded ${item.category === 'pizza' ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-800'}">
+                                ${item.category === 'pizza' ? 'พิซซ่า' : 'เครื่องดื่ม'}
+                            </span>
+                            <h4 class="font-bold text-sm text-stone-800 truncate mt-0.5">${item.name}</h4>
+                            <p class="text-sm font-bold text-amber-700">฿${item.price}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteMenuItem('${item.id}')" title="ลบเมนู" class="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition shrink-0">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // 4. แสดงผลและอัปเดตสถานะออเดอร์ฝั่งร้านค้า
+        function renderMerchantOrders() {
+            const pendingList = document.getElementById('list-orders-pending');
+            const preparingList = document.getElementById('list-orders-preparing');
+            const completedList = document.getElementById('list-orders-completed');
+
+            const pending = orders.filter(o => o.status === 'pending');
+            const preparing = orders.filter(o => o.status === 'preparing');
+            const completed = orders.filter(o => o.status === 'completed');
+
+            document.getElementById('count-pending').textContent = pending.length;
+            document.getElementById('pending-orders-count').textContent = pending.length;
+            document.getElementById('count-preparing').textContent = preparing.length;
+            document.getElementById('count-completed').textContent = completed.length;
+
+            pendingList.innerHTML = pending.length ? pending.map(o => createOrderCardHTML(o)).join('') : `<p class="text-center text-xs text-stone-400 py-8">ไม่มีออเดอร์ใหม่</p>`;
+            preparingList.innerHTML = preparing.length ? preparing.map(o => createOrderCardHTML(o)).join('') : `<p class="text-center text-xs text-stone-400 py-8">ไม่มีรายการกำลังทำ</p>`;
+            completedList.innerHTML = completed.length ? completed.map(o => createOrderCardHTML(o)).join('') : `<p class="text-center text-xs text-stone-400 py-8">ยังไม่มีประวัติเสิร์ฟ</p>`;
+
+            lucide.createIcons();
+        }
+
+        function createOrderCardHTML(order) {
+            let actionButtons = '';
+            if (order.status === 'pending') {
+                actionButtons = `
+                    <button onclick="updateOrderStatus('${order.id}', 'preparing')" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5">
+                        <i data-lucide="flame" class="w-4 h-4"></i> รับออเดอร์ & เริ่มทำ
+                    </button>
+                `;
+            } else if (order.status === 'preparing') {
+                actionButtons = `
+                    <button onclick="updateOrderStatus('${order.id}', 'completed')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5">
+                        <i data-lucide="check-circle-2" class="w-4 h-4"></i> ทำเสร็จแล้ว / เสิร์ฟลูกค้า
+                    </button>
+                `;
+            } else {
+                actionButtons = `
+                    <div class="text-center text-xs text-emerald-600 font-medium py-1 bg-emerald-50 rounded-lg">
+                        ✓ เสิร์ฟเรียบร้อยแล้ว
+                    </div>
+                `;
+            }
+
+            return `
+            <div class="bg-white p-4 rounded-2xl shadow-sm border ${order.status === 'pending' ? 'border-red-300 new-order-badge' : 'border-stone-200'}">
+                <div class="flex items-center justify-between pb-2 mb-2 border-b border-stone-100">
+                    <span class="font-bold text-base text-stone-900 bg-stone-100 px-2.5 py-0.5 rounded-lg">${order.table}</span>
+                    <span class="text-xs text-stone-500 flex items-center gap-1">
+                        <i data-lucide="clock" class="w-3 h-3"></i> ${order.timeString || ''} น.
+                    </span>
+                </div>
+                
+                <ul class="space-y-1.5 mb-3">
+                    ${order.items.map(item => `
+                        <li class="flex items-start justify-between text-sm">
+                            <span class="font-medium text-stone-800">
+                                <span class="inline-block w-5 text-amber-700 font-bold">${item.qty}x</span> ${item.name}
+                            </span>
+                            <span class="text-stone-500 text-xs">฿${item.price * item.qty}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+
+                ${order.note ? `
+                    <div class="bg-amber-50 text-amber-900 text-xs p-2 rounded-lg mb-3 border border-amber-200/60">
+                        <strong>หมายเหตุ:</strong> ${order.note}
+                    </div>
+                ` : ''}
+
+                <div class="flex items-center justify-between text-sm font-bold mb-3 pt-2 border-t border-stone-100">
+                    <span class="text-stone-500">ยอดรวม</span>
+                    <span class="text-base text-stone-900">฿${order.total}</span>
+                </div>
+
+                ${actionButtons}
+            </div>
+            `;
+        }
+
+        window.updateOrderStatus = async function(orderId, newStatus) {
+            try {
+                if (db && currentUser) {
+                    const orderRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId);
+                    await updateDoc(orderRef, { status: newStatus });
+                } else {
+                    const ord = orders.find(o => o.id === orderId);
+                    if (ord) ord.status = newStatus;
+                    renderMerchantOrders();
+                    renderCustomerActiveOrders();
+                }
+            } catch (error) {
+                console.error("Update status error:", error);
+            }
+        };
+
+        // 5. สร้าง QR Code สำหรับแต่ละโต๊ะ
+        window.resetQrBaseUrl = function() {
+            const currentUrl = window.location.href.split('?')[0];
+            const inputEl = document.getElementById('qr-base-url-input');
+            if (inputEl) {
+                inputEl.value = currentUrl.startsWith('http') ? currentUrl : '';
+            }
+            generateTableQRCodes();
+        };
+
+        window.generateTableQRCodes = function() {
+            const container = document.getElementById('qr-cards-container');
+            const tables = ['โต๊ะ 1', 'โต๊ะ 2', 'โต๊ะ 3', 'โต๊ะ 4', 'โต๊ะ 5', 'สั่งกลับบ้าน (Takeaway)'];
+            const inputEl = document.getElementById('qr-base-url-input');
+            const warningEl = document.getElementById('qr-url-warning');
+            
+            let rawCurrentUrl = window.location.href.split('?')[0];
+            if (inputEl && !inputEl.value && rawCurrentUrl.startsWith('http')) {
+                inputEl.value = rawCurrentUrl;
+            }
+
+            let baseUrl = (inputEl && inputEl.value.trim()) ? inputEl.value.trim().split('?')[0] : rawCurrentUrl;
+
+            // แจ้งเตือนหากยังเป็น URL ของหน้าต่างทดสอบ (Sandbox) ที่กล้องมือถือสแกนไม่ได้
+            if (warningEl) {
+                if (!baseUrl.startsWith('http')) {
+                    warningEl.classList.remove('hidden');
+                    baseUrl = 'https://baansuan-cafe.example.com'; // ลิงก์ตัวอย่างเพื่อให้ QR Code สร้างภาพได้สมบูรณ์
+                } else {
+                    warningEl.classList.add('hidden');
+                }
+            }
+
+            container.innerHTML = tables.map((tableName, index) => `
+                <div class="border border-stone-200 rounded-2xl p-5 flex flex-col items-center text-center bg-stone-50/50 hover:shadow-md transition">
+                    <span class="bg-stone-900 text-amber-400 font-bold px-4 py-1 rounded-full text-sm mb-3">${tableName}</span>
+                    <div id="qrcode-box-${index}" class="bg-white p-3 rounded-xl shadow-sm border border-stone-200 mb-3"></div>
+                    <p class="text-[11px] text-stone-400 break-all mb-3 px-2">${baseUrl}?table=${encodeURIComponent(tableName)}</p>
+                    <button onclick="simulateScanQR('${tableName}')" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i> ทดลองสแกนโต๊ะนี้
+                    </button>
+                </div>
+            `).join('');
+
+            // สร้างภาพ QR Code จริงด้วย QRCode.js
+            tables.forEach((tableName, index) => {
+                const targetUrl = `${baseUrl}?table=${encodeURIComponent(tableName)}`;
+                new QRCode(document.getElementById(`qrcode-box-${index}`), {
+                    text: targetUrl,
+                    width: 140,
+                    height: 140,
+                    colorDark: "#1c1917",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            });
+            lucide.createIcons();
+        };
+
+        // แสดง Toast แจ้งเตือนมุมขวาล่าง
+        function showToast(message, color = 'stone') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgClasses = {
+                stone: 'bg-stone-900 text-white border-stone-700',
+                amber: 'bg-amber-600 text-white border-amber-500',
+                emerald: 'bg-emerald-600 text-white border-emerald-500',
+                red: 'bg-red-600 text-white border-red-500'
+            };
+
+            toast.className = `${bgClasses[color] || bgClasses.stone} px-4 py-3 rounded-xl shadow-xl border text-sm font-medium flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.textContent = message;
+            
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function renderAll() {
+            renderCustomerMenu();
+            renderMerchantMenu();
+            renderMerchantOrders();
+            renderCustomerActiveOrders();
+        }
+
+        // เริ่มทำงานเมื่อโหลดหน้าเว็บเสร็จสมบูรณ์
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
