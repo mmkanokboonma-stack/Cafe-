@@ -657,6 +657,33 @@
         const MERCHANT_PIN = "1234"; // รหัส PIN สำหรับเข้าสู่หน้าจัดการร้านค้า
         const DRINK_SUBCATEGORIES = ['กาแฟ', 'ชา-นม', 'นมหมี', 'ชา-น้ำผลไม้', 'โซดา', 'เฉาก๊วย'];
 
+        // สร้างและเก็บ ID ประจำเครื่อง/เซสชันของลูกค้าแต่ละคน เพื่อไม่ให้เห็นออเดอร์ของลูกค้าคนก่อนหน้า
+        const CUSTOMER_SESSION_KEY = 'baansuan_customer_session_id';
+        const CUSTOMER_OWN_ORDERS_KEY = 'baansuan_customer_own_order_ids';
+        let customerSessionId = localStorage.getItem(CUSTOMER_SESSION_KEY);
+        if (!customerSessionId) {
+            customerSessionId = 'cust_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+            localStorage.setItem(CUSTOMER_SESSION_KEY, customerSessionId);
+        }
+        let customerOwnOrderIds = [];
+        try {
+            customerOwnOrderIds = JSON.parse(localStorage.getItem(CUSTOMER_OWN_ORDERS_KEY) || '[]');
+        } catch (e) {
+            customerOwnOrderIds = [];
+        }
+
+        function rememberCustomerOrderId(orderId) {
+            if (!orderId) return;
+            if (!customerOwnOrderIds.includes(orderId)) {
+                customerOwnOrderIds.push(orderId);
+                // เก็บประวัติล่าสุด 50 บิลของเครื่องนี้
+                if (customerOwnOrderIds.length > 50) {
+                    customerOwnOrderIds = customerOwnOrderIds.slice(-50);
+                }
+                localStorage.setItem(CUSTOMER_OWN_ORDERS_KEY, JSON.stringify(customerOwnOrderIds));
+            }
+        }
+
         // เมนูเริ่มต้น (กรณีเปิดร้านครั้งแรก)
         const defaultMenus = [
             {
@@ -1187,6 +1214,7 @@
 
             const orderData = {
                 table: currentTable,
+                customerSessionId: customerSessionId,
                 items: cart.map(c => ({
                     id: c.id,
                     name: c.name,
@@ -1205,9 +1233,12 @@
             try {
                 if (db && currentUser) {
                     const ordersColRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
-                    await addDoc(ordersColRef, orderData);
+                    const docRef = await addDoc(ordersColRef, orderData);
+                    rememberCustomerOrderId(docRef.id);
                 } else {
-                    orders.unshift({ id: 'ord_' + Date.now(), ...orderData });
+                    const localId = 'ord_' + Date.now();
+                    rememberCustomerOrderId(localId);
+                    orders.unshift({ id: localId, ...orderData });
                     renderMerchantOrders();
                     renderCustomerActiveOrders();
                     renderSalesReport();
@@ -1233,7 +1264,11 @@
         function renderCustomerActiveOrders() {
             const section = document.getElementById('customer-active-orders');
             const list = document.getElementById('customer-orders-list');
-            const tableOrders = orders.filter(o => o.table === currentTable);
+            // แสดงเฉพาะออเดอร์ของโต๊ะนี้ที่ถูกสั่งจากเครื่อง/เซสชันของลูกค้าคนนี้เท่านั้น
+            const tableOrders = orders.filter(o =>
+                o.table === currentTable &&
+                (o.customerSessionId === customerSessionId || customerOwnOrderIds.includes(o.id))
+            );
 
             if (tableOrders.length === 0) {
                 section.classList.add('hidden');
