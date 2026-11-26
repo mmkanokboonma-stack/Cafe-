@@ -286,6 +286,17 @@
         <!-- แท็บย่อย 2.2: เพิ่มเมนูใหม่พร้อมรูปภาพและราคา -->
         <section id="merchant-section-menu" class="hidden space-y-6">
             <!-- ฟอร์มเพิ่มเมนูใหม่ (อยู่ด้านบน เต็มความกว้าง) -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <h3 class="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+                    <i data-lucide="plus-square" class="w-5 h-5 text-amber-600"></i>
+                    เพิ่มเมนูใหม่เข้าร้าน
+                </h3>
+                <form id="add-menu-form" onsubmit="handleAddMenu(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-stone-700 mb-1">ชื่อเมนู *</label>
+                        <input type="text" id="menu-name" required placeholder="เช่น อเมริกาโน่น้ำผึ้งมะนาว" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                    </div>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <div>
                             <label class="block text-sm font-medium text-stone-700 mb-1">หมวดหมู่หลัก *</label>
@@ -953,7 +964,10 @@
             }
             silentRefreshTimer = setInterval(() => {
                 performSilentBackgroundSync();
-        // เสียงแจ้งเตือนเบาๆ ด้วย Web Audio API เมื่อมีออเดอร์เข้า (ใช้เสียงดนตรี 4 จังหวะจากฝั่งลูกค้าเดิม)
+            }, SILENT_REFRESH_INTERVAL_MS);
+        }
+
+        // เสียงแจ้งเตือนเบาๆ ด้วย Web Audio API เมื่อมีออเดอร์เข้า (ใช้เสียงดนตรี 4 จังหวะ)
         function playNotificationBeep() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -979,27 +993,9 @@
             }
         }
 
-        // เสียงแจ้งเตือนฝั่งลูกค้าเมื่อกดยืนยันส่งออเดอร์สำเร็จ (ใช้เสียงติ๊ง-ต่อง 2 จังหวะจากหลังร้านเดิม)
+        // เสียงแจ้งเตือนฝั่งลูกค้าเมื่อกดยืนยันส่งออเดอร์สำเร็จ (ใช้เสียงเดียวกับหลังร้าน)
         function playCustomerOrderSuccessSound() {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                if (ctx.state === 'suspended') {
-                    ctx.resume();
-                }
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, ctx.currentTime); // โน้ต A5
-                osc.frequency.setValueAtTime(1108.73, ctx.currentTime + 0.15); // โน้ต C#6
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.5);
-            } catch (e) {
-                // ข้ามหากอุปกรณ์ปิดเสียงหรือเบราว์เซอร์ไม่รองรับ
-            }
+            playNotificationBeep();
         }
 
         // ==========================================
@@ -1682,9 +1678,14 @@
             let actionButtons = '';
             if (order.status === 'pending') {
                 actionButtons = `
-                    <button onclick="updateOrderStatus('${order.id}', 'preparing')" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5">
-                        <i data-lucide="flame" class="w-4 h-4"></i> รับออเดอร์ & เริ่มทำ
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="updateOrderStatus('${order.id}', 'preparing')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5">
+                            <i data-lucide="flame" class="w-4 h-4"></i> รับออเดอร์ & เริ่มทำ
+                        </button>
+                        <button type="button" onclick="deleteWholeOrder('${order.id}')" title="ลบทั้งบิลนี้" class="px-3 py-2 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-red-600 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-1 shrink-0">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> ลบบิล
+                        </button>
+                    </div>
                 `;
             } else if (order.status === 'preparing') {
                 actionButtons = `
@@ -1704,9 +1705,11 @@
             <div class="bg-white p-4 rounded-2xl shadow-sm border ${order.status === 'pending' ? 'border-red-300 new-order-badge' : 'border-stone-200'}">
                 <div class="flex items-center justify-between pb-2 mb-2 border-b border-stone-100">
                     <span class="font-bold text-base text-stone-900 bg-stone-100 px-2.5 py-0.5 rounded-lg">${order.table}</span>
-                    <span class="text-xs text-stone-500 flex items-center gap-1">
-                        <i data-lucide="clock" class="w-3 h-3"></i> ${order.timeString || ''} น.
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-stone-500 flex items-center gap-1">
+                            <i data-lucide="clock" class="w-3 h-3"></i> ${order.timeString || ''} น.
+                        </span>
+                    </div>
                 </div>
                 
                 <ul class="space-y-1.5 mb-3">
@@ -1741,9 +1744,44 @@
             `;
         }
 
+        // ลบทั้งบิล (แสดงเฉพาะสถานะ รอรับออเดอร์)
+        window.deleteWholeOrder = function(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order || order.status !== 'pending') return;
+
+            const modal = document.getElementById('confirm-item-delete-modal');
+            const textEl = document.getElementById('confirm-item-delete-text');
+            const confirmBtn = document.getElementById('btn-confirm-item-delete');
+
+            textEl.textContent = `ต้องการยกเลิกและลบทั้งบิลของ "${order.table}" (ยอดรวม ฿${Number(order.total || 0).toLocaleString()} จำนวน ${order.items.length} รายการ) ใช่หรือไม่?`;
+            confirmBtn.textContent = 'ลบทั้งบิลนี้';
+            modal.classList.remove('hidden');
+
+            confirmBtn.onclick = async () => {
+                closeConfirmItemDeleteModal();
+                confirmBtn.textContent = 'ลบรายการนี้';
+                try {
+                    if (db && currentUser) {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId));
+                    } else {
+                        orders = orders.filter(o => o.id !== orderId);
+                        renderMerchantOrders();
+                        renderCustomerActiveOrders();
+                        renderDailySummary();
+                    }
+                    showToast(`🗑️ ลบทั้งบิลของ ${order.table} เรียบร้อยแล้ว`, "stone");
+                } catch (error) {
+                    console.error("Delete whole order error:", error);
+                    showToast("❌ ไม่สามารถลบบิลได้ กรุณาลองใหม่", "red");
+                }
+            };
+        };
+
         // ลบรายการอาหาร/เครื่องดื่มออกเป็นบางรายการในบิลของลูกค้า
         window.closeConfirmItemDeleteModal = function() {
             document.getElementById('confirm-item-delete-modal').classList.add('hidden');
+            const confirmBtn = document.getElementById('btn-confirm-item-delete');
+            if (confirmBtn) confirmBtn.textContent = 'ลบรายการนี้';
         };
 
         window.removeOrderItem = function(orderId, itemIndex) {
