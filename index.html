@@ -395,6 +395,10 @@
                         <span class="text-xs text-stone-500">พิมพ์ชื่อเพื่อค้นหา หรือแก้ไขราคาขายและต้นทุนได้ทันที</span>
                     </div>
                     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <button type="button" onclick="syncAll18PizzasToMenu()" class="px-3.5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center justify-center gap-1.5 shrink-0">
+                            <i data-lucide="pizza" class="w-4 h-4"></i>
+                            <span>ซิงค์เมนูพิซซ่า 18 หน้า</span>
+                        </button>
                         <select id="merchant-menu-cat-filter" onchange="renderMerchantMenu()" class="px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-medium text-stone-700 focus:outline-none focus:border-amber-600">
                             <option value="all">ทุกหมวดหมู่</option>
                             <option value="coffee">☕ เครื่องดื่ม & กาแฟ (ทั้งหมด)</option>
@@ -584,25 +588,25 @@
                 <div class="pt-6 mt-6 border-t border-stone-200">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                         <div>
-                            <h4 class="font-bold text-stone-900 text-base flex items-center gap-2">
+                            <h4 class="font-bold text-stone-800 text-sm flex items-center gap-1.5">
                                 <i data-lucide="database" class="w-4 h-4 text-emerald-600"></i>
-                                ประวัติสรุปยอดขายรายวันที่บันทึกไว้ตลอด
+                                ประวัติสรุปยอดขายรายวันที่บันทึกไว้ในระบบ
                             </h4>
-                            <p class="text-xs text-stone-500">ระบบจะอัปเดตและบันทึกยอดของแต่ละวันลงฐานข้อมูล Cloud อัตโนมัติเมื่อมีออเดอร์ หรือกดปุ่ม "บันทึกยอดวันนี้" เพื่อเก็บข้อมูลไว้ดูย้อนหลังได้ตลอด</p>
+                            <p class="text-[11px] text-stone-500">ระบบจะบันทึกยอดขาย ต้นทุน และกำไรของแต่ละวันเก็บไว้ในฐานข้อมูลอัตโนมัติตลอดเวลา</p>
                         </div>
                     </div>
                     <div class="overflow-x-auto border border-stone-200 rounded-2xl">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
-                                <tr class="bg-stone-900 text-white text-xs">
+                                <tr class="bg-stone-100 text-stone-700 text-xs">
                                     <th class="py-3 px-4 font-semibold">วันที่</th>
                                     <th class="py-3 px-3 font-semibold text-center">ออเดอร์</th>
-                                    <th class="py-3 px-3 font-semibold text-right text-amber-300">ยอดน้ำ (กำไร)</th>
-                                    <th class="py-3 px-3 font-semibold text-right text-orange-300">ยอดพิซซ่า (กำไร)</th>
+                                    <th class="py-3 px-3 font-semibold text-right">หมวดเครื่องดื่ม</th>
+                                    <th class="py-3 px-3 font-semibold text-right">หมวดพิซซ่า</th>
                                     <th class="py-3 px-3 font-semibold text-right">ยอดขายรวม</th>
                                     <th class="py-3 px-3 font-semibold text-right">ต้นทุนรวม</th>
-                                    <th class="py-3 px-3 font-semibold text-right text-emerald-300">กำไรสุทธิ</th>
-                                    <th class="py-3 px-4 font-semibold text-center">ดูรายละเอียด</th>
+                                    <th class="py-3 px-3 font-semibold text-right">กำไรสุทธิ</th>
+                                    <th class="py-3 px-4 font-semibold text-center">จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody id="saved-daily-summaries-tbody" class="divide-y divide-stone-100 bg-white">
@@ -613,30 +617,51 @@
                 </div>
             </div>
         </section>
-
     </main>
 
     <!-- ========================================== -->
-    <!-- Modal: ใส่รหัส PIN เข้าสู่ระบบฝั่งร้านค้า    -->
+    <!-- Modal: ยืนยันการลบรายการในบิล (Confirm Item Delete) -->
     <!-- ========================================== -->
-    <div id="merchant-pin-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden p-6 text-center">
-            <div class="w-14 h-14 bg-stone-900 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md">
-                <i data-lucide="lock" class="w-7 h-7"></i>
+    <div id="confirm-item-delete-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden p-6 text-center space-y-4">
+            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto">
+                <i data-lucide="trash-2" class="w-6 h-6"></i>
             </div>
-            <h3 class="text-xl font-bold text-stone-900">เข้าสู่ระบบจัดการร้านค้า</h3>
-            <p class="text-xs text-stone-500 mt-1 mb-5">กรุณากรอกรหัส PIN 4 หลักสำหรับพนักงาน/เจ้าของร้าน</p>
-            
+            <div>
+                <h3 class="text-lg font-bold text-stone-900">ยืนยันการลบรายการ?</h3>
+                <p id="confirm-item-delete-text" class="text-xs text-stone-500 mt-1">ต้องการลบรายการนี้ออกจากบิลของลูกค้าใช่หรือไม่</p>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button type="button" onclick="closeConfirmItemDeleteModal()" class="flex-1 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold rounded-xl text-sm transition">
+                    ยกเลิก
+                </button>
+                <button type="button" id="btn-confirm-item-delete" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-sm transition shadow-md">
+                    ลบรายการนี้
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Modal: เข้าสู่ระบบสำหรับเจ้าของร้าน/พนักงาน -->
+    <!-- ========================================== -->
+    <div id="merchant-pin-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden p-6 text-center space-y-4">
+            <div class="w-12 h-12 bg-stone-900 text-amber-400 rounded-2xl flex items-center justify-center mx-auto">
+                <i data-lucide="lock" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-stone-900">เข้าสู่ระบบจัดการร้านค้า</h3>
+                <p class="text-xs text-stone-500 mt-1">กรุณากรอกรหัส PIN 4 หลักสำหรับพนักงาน/เจ้าของร้าน</p>
+            </div>
             <form onsubmit="verifyMerchantPin(event)" class="space-y-4">
-                <input type="password" id="merchant-pin-input" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="••••" required
-                    class="w-full text-center text-2xl tracking-[0.5em] font-bold py-3 bg-stone-100 border border-stone-300 rounded-2xl focus:outline-none focus:border-amber-600 focus:bg-white">
-                <p id="pin-error-msg" class="text-xs text-red-500 hidden">รหัส PIN ไม่ถูกต้อง กรุณาลองใหม่</p>
-                
-                <div class="flex gap-2 pt-2">
-                    <button type="button" onclick="closeMerchantAuthModal()" class="flex-1 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-sm transition">
+                <input type="password" id="merchant-pin-input" maxlength="4" inputmode="numeric" placeholder="••••" required class="w-full text-center text-2xl tracking-[0.5em] font-bold py-3 border border-stone-300 rounded-xl focus:outline-none focus:border-amber-600">
+                <p id="pin-error-msg" class="text-xs text-red-500 hidden">รหัส PIN ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</p>
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeMerchantAuthModal()" class="flex-1 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold rounded-xl text-sm transition">
                         ยกเลิก
                     </button>
-                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-stone-900 hover:bg-amber-600 text-white font-semibold text-sm transition shadow">
+                    <button type="submit" class="flex-1 py-2.5 bg-stone-900 hover:bg-amber-600 text-white font-semibold rounded-xl text-sm transition shadow-md">
                         เข้าสู่ระบบ
                     </button>
                 </div>
@@ -645,91 +670,252 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- Modal: ยืนยันการลบรายการในบิล (Confirm Modal) -->
-    <!-- ========================================== -->
-    <div id="confirm-item-delete-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4">
-            <h3 class="text-lg font-bold text-stone-900">ยืนยันการลบรายการ</h3>
-            <p id="confirm-item-delete-text" class="text-sm text-stone-600 leading-relaxed"></p>
-            <div class="flex gap-2 pt-2">
-                <button type="button" onclick="closeConfirmItemDeleteModal()" class="flex-1 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-sm transition">
-                    ยกเลิก
-                </button>
-                <button type="button" id="btn-confirm-item-delete" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition shadow">
-                    ลบรายการนี้
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- Firebase & Application Logic               -->
+    <!-- Firebase SDK & Application Logic           -->
     <!-- ========================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ตั้งค่า Firebase จาก Environment หรือโปรเจกต์ baansuan-cafe-pos
-        const firebaseConfig = typeof __firebase_config !== 'undefined'
-            ? JSON.parse(__firebase_config)
-            : {
-                apiKey: "AIzaSyATsHffYiLARGcs_F2SYCvZ2_I-7xMULWQ",
-                authDomain: "baansuan-cafe-pos.firebaseapp.com",
-                projectId: "baansuan-cafe-pos",
-                storageBucket: "baansuan-cafe-pos.firebasestorage.app",
-                messagingSenderId: "682402512495",
-                appId: "1:682402512495:web:b09d47f3f76b4d9935979a"
-            };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'baansuan-cafe-pos';
-        
-        let db = null;
+        // 1. ตั้งค่า Firebase (รองรับทั้งใน Environment นี้ และเมื่อนำไปอัปโหลดขึ้น GitHub)
+        const FALLBACK_FIREBASE_CONFIG = {
+            // หากต้องการเชื่อมต่อข้ามเครื่องบน GitHub สามารถนำค่าจาก Firebase Console มาวางแทนตรงนี้ได้ครับ
+            // apiKey: "...", authDomain: "...", projectId: "...", storageBucket: "...", messagingSenderId: "...", appId: "..."
+        };
+
+        let firebaseConfig = null;
+        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+            try {
+                firebaseConfig = JSON.parse(__firebase_config);
+            } catch (e) {
+                console.warn("Invalid __firebase_config", e);
+            }
+        } else if (FALLBACK_FIREBASE_CONFIG.apiKey) {
+            firebaseConfig = FALLBACK_FIREBASE_CONFIG;
+        }
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'baansuan-cafe-pizza';
+
+        let app = null;
         let auth = null;
+        let db = null;
         let currentUser = null;
 
-        // สถานะของแอปพลิเคชัน (State)
+        // สถานะข้อมูลของแอปพลิเคชัน
         let menuItems = [];
         let orders = [];
         let savedDailySummaries = [];
         let cart = [];
+        let currentTable = 'โต๊ะ 1';
         let currentCategory = 'all';
         let currentSubCategory = 'all';
-        let currentTable = 'โต๊ะ 1';
+        const DRINK_SUBCATEGORIES = ['กาแฟ', 'ชา-นม', 'นมหมี', 'ชา-น้ำผลไม้', 'โซดา', 'เฉาก๊วย'];
         let uploadedImageBase64 = '';
         let isFirstOrderLoad = true;
         let isMerchantAuthenticated = false;
-        const MERCHANT_PIN = "1234"; // รหัส PIN สำหรับเข้าสู่หน้าจัดการร้านค้า
-        const DRINK_SUBCATEGORIES = ['กาแฟ', 'ชา-นม', 'นมหมี', 'ชา-น้ำผลไม้', 'โซดา', 'เฉาก๊วย'];
+        const MERCHANT_PIN = '1234'; // รหัสผ่านสำหรับเจ้าของร้าน/พนักงาน
 
-        // สร้างและเก็บ ID ประจำเครื่อง/เซสชันของลูกค้าแต่ละคน เพื่อไม่ให้เห็นออเดอร์ของลูกค้าคนก่อนหน้า
-        const CUSTOMER_SESSION_KEY = 'baansuan_customer_session_id';
-        const CUSTOMER_OWN_ORDERS_KEY = 'baansuan_customer_own_order_ids';
-        let customerSessionId = sessionStorage.getItem(CUSTOMER_SESSION_KEY);
-        if (!customerSessionId) {
-            customerSessionId = 'cust_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-            sessionStorage.setItem(CUSTOMER_SESSION_KEY, customerSessionId);
-            // ล้างรายการบิลเก่าเมื่อสแกน QR Code หรือเปิดหน้าสั่งอาหารรอบใหม่
-            sessionStorage.removeItem(CUSTOMER_OWN_ORDERS_KEY);
-        }
-        let customerOwnOrderIds = [];
-        try {
-            customerOwnOrderIds = JSON.parse(sessionStorage.getItem(CUSTOMER_OWN_ORDERS_KEY) || '[]');
-        } catch (e) {
-            customerOwnOrderIds = [];
-        }
+        // รหัสเซสชันเฉพาะของลูกค้าแต่ละคน (ป้องกันไม่ให้เห็นออเดอร์เก่าของลูกค้าคนก่อนหน้า)
+        const customerSessionId = (() => {
+            try {
+                let sid = sessionStorage.getItem('baansuan_customer_session_id');
+                if (!sid) {
+                    sid = 'cust_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+                    sessionStorage.setItem('baansuan_customer_session_id', sid);
+                }
+                return sid;
+            } catch (e) {
+                return 'cust_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+            }
+        })();
+
+        let customerOwnOrderIds = (() => {
+            try {
+                return JSON.parse(sessionStorage.getItem('baansuan_own_order_ids') || '[]');
+            } catch (e) {
+                return [];
+            }
+        })();
 
         function rememberCustomerOrderId(orderId) {
-            if (!orderId) return;
-            if (!customerOwnOrderIds.includes(orderId)) {
-                customerOwnOrderIds.push(orderId);
-                if (customerOwnOrderIds.length > 20) {
-                    customerOwnOrderIds = customerOwnOrderIds.slice(-20);
-                }
-                sessionStorage.setItem(CUSTOMER_OWN_ORDERS_KEY, JSON.stringify(customerOwnOrderIds));
-            }
+            if (!orderId || customerOwnOrderIds.includes(orderId)) return;
+            customerOwnOrderIds.push(orderId);
+            try {
+                sessionStorage.setItem('baansuan_own_order_ids', JSON.stringify(customerOwnOrderIds));
+            } catch (e) {}
         }
 
-        // เมนูเริ่มต้น (กรณีเปิดร้านครั้งแรก)
+        // สร้างภาพหน้าพิซซ่าเฉพาะตัวสำหรับแต่ละหน้า (No base64 / ใช้ภาพ Unsplash คมชัดคู่กับป้ายหน้าพิซซ่าแต่ละชนิด)
+        const PIZZA_IMAGES = {
+            seafood: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=85",
+            seafoodCocktail: "https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?auto=format&fit=crop&w=600&q=85",
+            hawaiian: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=85",
+            hamCheese: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=600&q=85",
+            pepperoni: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=600&q=85",
+            baconCheese: "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=600&q=85",
+            spinachCheese: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=600&q=85",
+            spinachHam: "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=600&q=85",
+            spinachBacon: "https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?auto=format&fit=crop&w=600&q=85",
+            doubleCheese: "https://images.unsplash.com/photo-1548369937-47519962c11a?auto=format&fit=crop&w=600&q=85",
+            truffleCheese: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=85",
+            truffleBacon: "https://images.unsplash.com/photo-1595854341625-f33ee10dbf94?auto=format&fit=crop&w=600&q=85",
+            truffleHam: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=600&q=85",
+            baconHam: "https://images.unsplash.com/photo-1588315029754-2dd089d39a1a?auto=format&fit=crop&w=600&q=85",
+            pepperoniTruffle: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=600&q=85",
+            truffleSpinach: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=600&q=85",
+            crabStick: "https://images.unsplash.com/photo-1595854341625-f33ee10dbf94?auto=format&fit=crop&w=600&q=85",
+            crabHamSpinach: "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=600&q=85"
+        };
+
+        // เมนูพิซซ่าทั้ง 18 หน้าตามป้ายเมนูของร้าน
+        const pizza18Menus = [
+            {
+                name: "1. พิซซ่าซีฟู้ดชีส",
+                category: "pizza",
+                price: 279,
+                cost: 115,
+                desc: "กุ้งสด ปลาหมึก หอยแมลงภู่ อบชีสมอสซาเรลล่าเยิ้มๆ หอมกลิ่นเตาฟืน",
+                image: PIZZA_IMAGES.seafood
+            },
+            {
+                name: "2. พิซซ่าซีฟู้ดค็อกเทลชีส",
+                category: "pizza",
+                price: 289,
+                cost: 120,
+                desc: "ซีฟู้ดจัดเต็มราดซอสค็อกเทลสูตรพิเศษและชีสยืดเต็มคำ",
+                image: PIZZA_IMAGES.seafoodCocktail
+            },
+            {
+                name: "3. พิซซ่าฮาวายเอี้ยนชีส",
+                category: "pizza",
+                price: 259,
+                cost: 95,
+                desc: "แฮมรมควันชิ้นโต สับปะรดหวานฉ่ำ ซอสมะเขือเทศ และชีสเยิ้ม",
+                image: PIZZA_IMAGES.hawaiian
+            },
+            {
+                name: "4. พิซซ่าแฮมชีส",
+                category: "pizza",
+                price: 249,
+                cost: 90,
+                desc: "แฮมหมูรมควันเนื้อนุ่มวางเต็มถาด โรยชีสมอสซาเรลล่าอบกรอบนอกนุ่มใน",
+                image: PIZZA_IMAGES.hamCheese
+            },
+            {
+                name: "5. พิซซ่าเปปเปอร์โรนีชีส",
+                category: "pizza",
+                price: 289,
+                cost: 110,
+                desc: "เปปเปอร์โรนีแผ่นใหญ่รสเข้มข้น อบพร้อมชีสยืดหอมกรุ่น",
+                image: PIZZA_IMAGES.pepperoni
+            },
+            {
+                name: "6. พิซซ่าเบคอนชีส",
+                category: "pizza",
+                price: 249,
+                cost: 95,
+                desc: "เบคอนรมควันหอมกรอบ ตัดกับชีสมอสซาเรลล่าเข้มข้นเต็มถาด",
+                image: PIZZA_IMAGES.baconCheese
+            },
+            {
+                name: "7. พิซซ่าผักโขมชีส",
+                category: "pizza",
+                price: 249,
+                cost: 85,
+                desc: "ผักโขมผัดครีมซอสสูตรเฉพาะของทางร้าน อบชีสหอมนุ่มละมุน",
+                image: PIZZA_IMAGES.spinachCheese
+            },
+            {
+                name: "8. พิซซ่าผักโขม+แฮมชีส",
+                category: "pizza",
+                price: 279,
+                cost: 105,
+                desc: "ผักโขมอบครีมคู่กับแฮมรมควันชิ้นโตและชีสยืดเต็มคำ",
+                image: PIZZA_IMAGES.spinachHam
+            },
+            {
+                name: "9. พิซซ่าผักโขม+เบคอนชีส",
+                category: "pizza",
+                price: 279,
+                cost: 105,
+                desc: "ผักโขมหอมมันผสานเบคอนรมควันกรอบๆ และมอสซาเรลล่าชีส",
+                image: PIZZA_IMAGES.spinachBacon
+            },
+            {
+                name: "10. พิซซ่าดับเบิ้ลชีส",
+                category: "pizza",
+                price: 269,
+                cost: 100,
+                desc: "เอาใจคนรักชีสด้วยชีสเน้นๆ 2 เท่า ยืดจุใจทุกชิ้น",
+                image: PIZZA_IMAGES.doubleCheese
+            },
+            {
+                name: "11. พิซซ่าเห็ดทรัฟเฟิลชีส",
+                category: "pizza",
+                price: 269,
+                cost: 110,
+                desc: "ซอสครีมเห็ดทรัฟเฟิลหอมหรูหรา อบพร้อมเห็ดแชมปิญองและชีส",
+                image: PIZZA_IMAGES.truffleCheese
+            },
+            {
+                name: "12. พิซซ่าเห็ดทรัฟเฟิล+เบคอนชีส",
+                category: "pizza",
+                price: 289,
+                cost: 120,
+                desc: "ซอสทรัฟเฟิลหอมเข้มข้นท็อปด้วยเบคอนรมควันและชีสเยิ้ม",
+                image: PIZZA_IMAGES.truffleBacon
+            },
+            {
+                name: "13. พิซซ่าเห็ดทรัฟเฟิล+แฮมชีส",
+                category: "pizza",
+                price: 289,
+                cost: 120,
+                desc: "ความหอมของเห็ดทรัฟเฟิลผสานแฮมรมควันและมอสซาเรลล่าชีส",
+                image: PIZZA_IMAGES.truffleHam
+            },
+            {
+                name: "14. พิซซ่าเบคอน+แฮมชีส",
+                category: "pizza",
+                price: 289,
+                cost: 115,
+                desc: "จัดเต็มทั้งเบคอนกรอบและแฮมรมควัน อบชีสเต็มหน้า",
+                image: PIZZA_IMAGES.baconHam
+            },
+            {
+                name: "15. พิซซ่าเปปเปอร์โรนี+เห็ดทรัฟเฟิลชีส",
+                category: "pizza",
+                price: 300,
+                cost: 125,
+                desc: "เมนูซิกเนเจอร์ เปปเปอร์โรนีรสเข้มข้นตัดกับซอสครีมเห็ดทรัฟเฟิลและชีส",
+                image: PIZZA_IMAGES.pepperoniTruffle
+            },
+            {
+                name: "16. พิซซ่าเห็ดทรัฟเฟิล+ผักโขมชีส",
+                category: "pizza",
+                price: 300,
+                cost: 120,
+                desc: "ซอสครีมเห็ดทรัฟเฟิลหอมกรุ่นคู่ผักโขมอบชีสเข้มข้น",
+                image: PIZZA_IMAGES.truffleSpinach
+            },
+            {
+                name: "17. พิซซ่าปูอัดชีส",
+                category: "pizza",
+                price: 259,
+                cost: 90,
+                desc: "ปูอัดเกรดพรีเมียมเนื้อแน่น วางเต็มถาดพร้อมชีสมอสซาเรลล่า",
+                image: PIZZA_IMAGES.crabStick
+            },
+            {
+                name: "18. พิซซ่าปูอัด+แฮม+ผักโขมชีส",
+                category: "pizza",
+                price: 299,
+                cost: 118,
+                desc: "รวมความอร่อย 3 หน้า ปูอัด แฮมรมควัน และผักโขมอบชีสเต็มคำ",
+                image: PIZZA_IMAGES.crabHamSpinach
+            }
+        ];
+
+        // เมนูเริ่มต้น (เครื่องดื่ม + พิซซ่าทั้ง 18 หน้า)
         const defaultMenus = [
             {
                 name: "เอสเปรสโซ่เย็น (Iced Espresso)",
@@ -758,30 +944,7 @@
                 desc: "ผงมัทฉะแท้จากญี่ปุ่นชงกับนมสดแท้ หอมละมุน",
                 image: "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=600&q=80"
             },
-            {
-                name: "พิซซ่าเปปเปอโรนีชีส (Pepperoni Pizza)",
-                category: "pizza",
-                price: 249,
-                cost: 95,
-                desc: "แป้งโฮมเมดอบเตาถ่าน หน้าเปปเปอโรนีและมอสซาเรลล่าชีสเยิ้มๆ",
-                image: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=600&q=80"
-            },
-            {
-                name: "พิซซ่าฮาวายเอี้ยน (Hawaiian Pizza)",
-                category: "pizza",
-                price: 239,
-                cost: 90,
-                desc: "แฮมรมควันชิ้นโต สับปะรดฉ่ำๆ และซอสมะเขือเทศสูตรพิเศษ",
-                image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80"
-            },
-            {
-                name: "พิซซ่าทรัฟเฟิลเห็ดรวม (Truffle Mushroom)",
-                category: "pizza",
-                price: 289,
-                cost: 115,
-                desc: "ซอสครีมเห็ดทรัฟเฟิลหอมกรุ่น โรยพาเมซานชีสและเห็ดแชมปิญอง",
-                image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
-            }
+            ...pizza18Menus
         ];
 
         // ตรวจสอบพารามิเตอร์จาก URL (เช่น ?table=โต๊ะ%202 เมื่อสแกน QR Code หรือ ?mode=pos สำหรับร้านค้า)
@@ -889,6 +1052,9 @@
                     for (const item of defaultMenus) {
                         await addDoc(menuColRef, item);
                     }
+                } else {
+                    // อัปเดตเมนูพิซซ่าทั้ง 18 หน้าเข้าสู่ฐานข้อมูลอัตโนมัติหากยังไม่มีครบ
+                    await syncAll18PizzasToMenu(true);
                 }
             } catch (err) {
                 console.error("Error seeding default menu:", err);
@@ -896,10 +1062,25 @@
 
             // 2. ฟังการเปลี่ยนแปลงของเมนู (Real-time Menu)
             onSnapshot(menuColRef, (snapshot) => {
-                menuItems = snapshot.docs.map(doc => ({
+                const rawItems = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
+
+                // ตรวจสอบและลบเมนูที่มีชื่อซ้ำกันในฐานข้อมูลออกอัตโนมัติ (เก็บไว้เพียง 1 รายการต่อชื่อเมนู)
+                const seenNames = new Set();
+                const uniqueItems = [];
+                rawItems.forEach(item => {
+                    const normalizedName = (item.name || '').trim();
+                    if (normalizedName && seenNames.has(normalizedName)) {
+                        deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', item.id)).catch(() => {});
+                    } else {
+                        if (normalizedName) seenNames.add(normalizedName);
+                        uniqueItems.push(item);
+                    }
+                });
+
+                menuItems = uniqueItems;
                 renderCustomerMenu();
                 renderMerchantMenu();
                 renderDailySummary();
@@ -1244,28 +1425,28 @@
             }
             renderCustomerMenu();
         };
-
-        function updateSubCatButtonsUI(subCat) {
-            document.querySelectorAll('.subcat-btn').forEach(btn => {
-                btn.className = "subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-white text-stone-700 hover:bg-amber-50 border border-stone-200 transition";
+        // ฟังก์ชันเรียงลำดับเมนูให้แยกหมวดหมู่ชัดเจน (เครื่องดื่ม & กาแฟ ขึ้นก่อน ตามด้วย พิซซ่า เรียงตามเลขหน้า 1-18)
+        function getSortedMenuItems(items) {
+            return [...items].sort((a, b) => {
+                const catOrderA = a.category === 'coffee' ? 0 : 1;
+                const catOrderB = b.category === 'coffee' ? 0 : 1;
+                if (catOrderA !== catOrderB) {
+                    return catOrderA - catOrderB;
+                }
+                if (a.category === 'coffee') {
+                    const subA = DRINK_SUBCATEGORIES.indexOf(a.subCategory || 'กาแฟ');
+                    const subB = DRINK_SUBCATEGORIES.indexOf(b.subCategory || 'กาแฟ');
+                    if (subA !== subB) return (subA === -1 ? 99 : subA) - (subB === -1 ? 99 : subB);
+                }
+                return (a.name || '').localeCompare(b.name || '', 'th', { numeric: true });
             });
-            const activeSubBtn = document.getElementById(`subcat-${subCat}`);
-            if (activeSubBtn) {
-                activeSubBtn.className = "subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-amber-600 text-white shadow-sm transition";
-            }
         }
-
-        window.filterSubCategory = function(subCat) {
-            currentSubCategory = subCat;
-            updateSubCatButtonsUI(subCat);
-            renderCustomerMenu();
-        };
 
         window.renderCustomerMenu = function() {
             const grid = document.getElementById('customer-menu-grid');
             const searchQuery = document.getElementById('customer-search').value.toLowerCase();
 
-            const filtered = menuItems.filter(item => {
+            const filtered = getSortedMenuItems(menuItems).filter(item => {
                 const matchCat = currentCategory === 'all' || item.category === currentCategory;
                 const itemSub = item.subCategory || 'กาแฟ';
                 const matchSubCat = currentCategory !== 'coffee' || currentSubCategory === 'all' || itemSub === currentSubCategory;
@@ -1623,56 +1804,130 @@
                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId);
                     await updateDoc(docRef, { subCategory: newSubCategory });
                 } else {
-                    const item = menuItems.find(m => m.id === itemId);
-                    if (item) item.subCategory = newSubCategory;
+                    const target = menuItems.find(m => m.id === itemId);
+                    if (target) target.subCategory = newSubCategory;
                     renderCustomerMenu();
                     renderMerchantMenu();
                 }
-                showToast(`📂 เปลี่ยนหมวดย่อยเป็น "${newSubCategory}" แล้ว`, "emerald");
+                showToast(`✅ เปลี่ยนหมวดย่อยเป็น "${newSubCategory}" แล้ว`, 'emerald');
             } catch (error) {
                 console.error("Update subcategory error:", error);
-                showToast("❌ ไม่สามารถเปลี่ยนหมวดย่อยได้", "red");
+                showToast("❌ ไม่สามารถเปลี่ยนหมวดย่อยได้", 'red');
             }
         };
 
-        // อัปเดตต้นทุนของเมนูที่มีอยู่แล้ว
-        window.updateMenuCost = async function(itemId, rawValue) {
-            const newCost = Math.max(0, Number(rawValue || 0));
-            try {
-                if (db && currentUser) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId);
-                    await updateDoc(docRef, { cost: newCost });
-                } else {
-                    const item = menuItems.find(m => m.id === itemId);
-                    if (item) item.cost = newCost;
-                    renderMerchantMenu();
-                    renderDailySummary();
-                }
-                showToast("💰 บันทึกต้นทุนต่อชิ้นเรียบร้อย", "emerald");
-            } catch (error) {
-                console.error("Update cost error:", error);
-                showToast("❌ ไม่สามารถบันทึกต้นทุนได้", "red");
-            }
-        };
-
-        // อัปเดตราคาขายของเมนูที่มีอยู่แล้ว
-        window.updateMenuPrice = async function(itemId, rawValue) {
-            const newPrice = Math.max(1, Number(rawValue || 0));
+        // อัปเดตราคาขายต่อชิ้นของเมนู
+        window.updateMenuPrice = async function(itemId, newPriceVal) {
+            const newPrice = Math.max(1, Number(newPriceVal || 0));
             try {
                 if (db && currentUser) {
                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId);
                     await updateDoc(docRef, { price: newPrice });
                 } else {
-                    const item = menuItems.find(m => m.id === itemId);
-                    if (item) item.price = newPrice;
+                    const target = menuItems.find(m => m.id === itemId);
+                    if (target) target.price = newPrice;
                     renderCustomerMenu();
                     renderMerchantMenu();
                     renderDailySummary();
                 }
-                showToast("🏷️ บันทึกราคาขายเรียบร้อย", "emerald");
+                showToast(`✅ บันทึกราคาขายใหม่ ฿${newPrice.toLocaleString()} แล้ว`, 'emerald');
             } catch (error) {
                 console.error("Update price error:", error);
-                showToast("❌ ไม่สามารถบันทึกราคาขายได้", "red");
+                showToast("❌ ไม่สามารถอัปเดตราคาขายได้", 'red');
+            }
+        };
+
+        // อัปเดตต้นทุนต่อชิ้นของเมนู
+        window.updateMenuCost = async function(itemId, newCostVal) {
+            const newCost = Math.max(0, Number(newCostVal || 0));
+            try {
+                if (db && currentUser) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId);
+                    await updateDoc(docRef, { cost: newCost });
+                } else {
+                    const target = menuItems.find(m => m.id === itemId);
+                    if (target) target.cost = newCost;
+                    renderMerchantMenu();
+                    renderDailySummary();
+                }
+                showToast(`✅ บันทึกต้นทุน/ชิ้น ฿${newCost.toLocaleString()} แล้ว`, 'emerald');
+            } catch (error) {
+                console.error("Update cost error:", error);
+                showToast("❌ ไม่สามารถอัปเดตต้นทุนได้", 'red');
+            }
+        };
+
+        // ซิงค์เมนูพิซซ่าทั้ง 18 หน้าตามป้ายเมนูเข้าสู่ฐานข้อมูลร้าน (ลบพิซซ่าตัวอย่างเก่า 3 หน้า, ลบรายการชื่อซ้ำ และเพิ่มครบทั้ง 18 หน้า)
+        window.syncAll18PizzasToMenu = async function(silent = false) {
+            const oldSampleNames = [
+                "พิซซ่าเปปเปอโรนีชีส (Pepperoni Pizza)",
+                "พิซซ่าฮาวายเอี้ยน (Hawaiian Pizza)",
+                "พิซซ่าทรัฟเฟิลเห็ดรวม (Truffle Mushroom)"
+            ];
+
+            try {
+                if (db && currentUser) {
+                    const menuColRef = collection(db, 'artifacts', appId, 'public', 'data', 'menu_items');
+                    const snapshot = await getDocs(menuColRef);
+                    const existingDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                    // ลบเมนูพิซซ่าตัวอย่างชุดเก่า 3 รายการ และลบเมนูชื่อซ้ำออกให้เหลืออย่างละ 1 รายการ
+                    const keptNames = new Set();
+                    const uniqueDocs = [];
+                    for (const docItem of existingDocs) {
+                        const cleanName = (docItem.name || '').trim();
+                        if (oldSampleNames.includes(docItem.name) || (cleanName && keptNames.has(cleanName))) {
+                            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', docItem.id));
+                        } else {
+                            if (cleanName) keptNames.add(cleanName);
+                            uniqueDocs.push(docItem);
+                        }
+                    }
+
+                    // เพิ่มหรืออัปเดตเมนูพิซซ่าทั้ง 18 หน้า
+                    for (const pItem of pizza18Menus) {
+                        const found = uniqueDocs.find(d => (d.name || '').trim() === pItem.name);
+                        if (!found) {
+                            await addDoc(menuColRef, pItem);
+                        } else if (
+                            !found.image ||
+                            found.image.includes('photo-1565299507177-b0ac66763828') ||
+                            found.image.includes('photo-1565299585323-38d6b0865b47') ||
+                            found.image.startsWith('data:image/svg+xml')
+                        ) {
+                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', found.id), {
+                                image: pItem.image,
+                                price: pItem.price
+                            });
+                        }
+                    }
+                } else {
+                    menuItems = menuItems.filter(m => !oldSampleNames.includes(m.name));
+                    pizza18Menus.forEach((pItem, idx) => {
+                        const existingLocal = menuItems.find(m => m.name === pItem.name);
+                        if (!existingLocal) {
+                            menuItems.push({ id: 'pizza18_' + idx, ...pItem });
+                        } else if (
+                            !existingLocal.image ||
+                            existingLocal.image.includes('photo-1565299507177-b0ac66763828') ||
+                            existingLocal.image.includes('photo-1565299585323-38d6b0865b47') ||
+                            existingLocal.image.startsWith('data:image/svg+xml')
+                        ) {
+                            existingLocal.image = pItem.image;
+                        }
+                    });
+                    renderCustomerMenu();
+                    renderMerchantMenu();
+                }
+
+                if (!silent) {
+                    showToast("🍕 อัปเดตเมนูพิซซ่าครบทั้ง 18 หน้าเรียบร้อยแล้ว!", "emerald");
+                }
+            } catch (error) {
+                console.error("Sync 18 pizzas error:", error);
+                if (!silent) {
+                    showToast("❌ ไม่สามารถซิงค์เมนูพิซซ่าได้ กรุณาลองใหม่", "red");
+                }
             }
         };
 
@@ -1714,7 +1969,7 @@
                 clearBtn.classList.toggle('hidden', searchText.length === 0);
             }
 
-            const filteredMenus = menuItems.filter(item => {
+            const filteredMenus = getSortedMenuItems(menuItems).filter(item => {
                 let matchCat = true;
                 if (selectedCat === 'pizza') {
                     matchCat = item.category === 'pizza';
