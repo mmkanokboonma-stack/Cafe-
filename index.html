@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บ้านสวนกาแฟ & พิซซ่าเตาฟืน (บ้านมอเศรษฐี) - ระบบสั่งอาหารและจัดการร้าน V.2</title>
+    <title>บ้านสวนกาแฟ & พิซซ่าเตาฟืน (บ้านมอเศรษฐี) - ระบบสั่งอาหารและจัดการร้าน</title>
     <!-- ไอคอนแอปสำหรับเพิ่มลงหน้าจอโฮม (iPhone / iPad / Android / Browser) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -74,13 +74,10 @@
     <header class="bg-stone-900 text-white sticky top-0 z-40 shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
             <!-- กดที่โลโก้ร้านเพื่อเปิดหน้าต่างใส่รหัส PIN เข้าสู่ระบบร้านค้า -->
-            <div onclick="openMerchantAuthModal()" class="flex items-center gap-3 cursor-pointer select-none group" title="สำหรับพนักงาน/เจ้าของร้าน (PIN: 1234)">
+            <div onclick="openMerchantAuthModal()" class="flex items-center gap-3 cursor-pointer select-none group" title="สำหรับพนักงาน/เจ้าของร้าน">
                 <img src="https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=180&h=180&q=85" alt="โลโก้ร้านบ้านสวนกาแฟ" class="w-10 h-10 rounded-xl object-cover border border-amber-500/60 shadow-sm group-hover:scale-105 transition">
                 <div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-base sm:text-xl font-bold tracking-wide text-amber-500">บ้านสวนกาแฟ & พิซซ่าเตาฟืน</h1>
-                        <span class="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full">V.2</span>
-                    </div>
+                    <h1 class="text-base sm:text-xl font-bold tracking-wide text-amber-500">บ้านสวนกาแฟ & พิซซ่าเตาฟืน</h1>
                     <p class="text-xs text-stone-400">บ้านมอเศรษฐี</p>
                 </div>
             </div>
@@ -92,7 +89,7 @@
                     <span id="wake-lock-text">เปิดจอค้างไว้ (กันหลับ)</span>
                 </button>
                 <span class="text-xs bg-amber-600/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5">
-                    <i data-lucide="shield-check" class="w-4 h-4"></i> โหมดร้านค้า (POS V.2)
+                    <i data-lucide="shield-check" class="w-4 h-4"></i> โหมดร้านค้า (POS)
                 </span>
                 <button onclick="logoutMerchant()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-800 hover:bg-red-600 text-stone-300 hover:text-white border border-stone-700 transition">
                     <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
@@ -155,11 +152,14 @@
 
                 <div class="relative">
                     <i data-lucide="search" class="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-                    <input type="text" id="customer-search" oninput="renderCustomerMenu()" placeholder="ค้นหาเมนู..." class="w-full sm:w-64 pl-10 pr-4 py-2 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                    <input type="text" id="customer-search" oninput="renderCustomerMenu()" placeholder="ค้นหาเมนู, หมวดหมู่..." class="w-full sm:w-64 pl-10 pr-8 py-2 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-amber-600">
+                    <button type="button" id="btn-clear-customer-search" onclick="clearCustomerSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700" title="ล้างคำค้นหา">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- แถบหมวดหมู่ย่อยสำหรับเครื่องดื่ม & กาแฟ (V.2) -->
+            <!-- แถบหมวดหมู่ย่อยสำหรับเครื่องดื่ม & กาแฟ -->
             <div id="customer-subcat-bar" class="hidden flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                 <span class="text-xs font-semibold text-stone-500 whitespace-nowrap mr-1">หมวดย่อย:</span>
                 <button onclick="filterSubCategory('all')" id="subcat-all" class="subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-amber-600 text-white shadow-sm transition">
@@ -183,71 +183,74 @@
                 <button onclick="filterSubCategory('เฉาก๊วย')" id="subcat-เฉาก๊วย" class="subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-white text-stone-700 hover:bg-amber-50 border border-stone-200 transition">
                     เฉาก๊วย
                 </button>
+                <button onclick="filterSubCategory('เพิ่มท็อปปิ้ง')" id="subcat-เพิ่มท็อปปิ้ง" class="subcat-btn px-3.5 py-1.5 rounded-lg font-bold text-xs whitespace-nowrap bg-gradient-to-r from-amber-100 to-orange-100 text-amber-900 hover:from-amber-200 hover:to-orange-200 border-2 border-amber-400 shadow-sm transition flex items-center gap-1">
+                    <span>✨ เพิ่มท็อปปิ้ง</span>
+                </button>
             </div>
         </div>
 
-        <!-- รายการเมนูอาหาร (Grid) -->
+        <!-- ตารางแสดงรายการเมนูของลูกค้า -->
         <div id="customer-menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            <!-- จะถูกเติมด้วย JavaScript -->
+            <!-- เติมด้วย JS -->
         </div>
 
-        <!-- แถบติดตามสถานะออเดอร์ล่าสุดของโต๊ะนี้ -->
-        <div id="customer-active-orders" class="mt-10 hidden">
-            <h3 class="text-lg font-bold text-stone-800 mb-3 flex items-center gap-2">
-                <i data-lucide="clock" class="w-5 h-5 text-amber-600"></i>
-                รายการที่สั่งไปแล้ว (<span id="active-order-table-label">โต๊ะ 1</span>)
+        <!-- สถานะออเดอร์ที่สั่งไปแล้วของโต๊ะนี้ -->
+        <section id="customer-active-orders" class="hidden mt-10 pt-6 border-t border-stone-200">
+            <h3 class="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+                <i data-lucide="receipt" class="w-5 h-5 text-amber-600"></i>
+                <span>รายการที่สั่งไปแล้ว (<span id="active-order-table-label">โต๊ะ 1</span>)</span>
             </h3>
-            <div id="customer-orders-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-        </div>
-
-        <!-- ปุ่มตะกร้าสินค้าลอยด้านล่าง (Floating Cart Bar) -->
-        <div id="floating-cart-bar" class="fixed bottom-4 left-4 right-4 max-w-3xl mx-auto bg-stone-900 text-white p-4 rounded-2xl shadow-2xl border border-stone-700 flex items-center justify-between transition-transform duration-300 translate-y-32 z-30">
-            <div class="flex items-center gap-3">
-                <div class="relative bg-amber-600 p-2.5 rounded-xl">
-                    <i data-lucide="shopping-bag" class="w-6 h-6 text-white"></i>
-                    <span id="cart-badge-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
-                </div>
-                <div>
-                    <p class="text-xs text-stone-400">ยอดรวมตะกร้า (<span id="cart-table-name">โต๊ะ 1</span>)</p>
-                    <p class="text-lg font-bold text-amber-400">฿<span id="cart-total-price">0</span></p>
-                </div>
+            <div id="customer-orders-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- เติมด้วย JS -->
             </div>
-            <button onclick="openCartModal()" class="bg-amber-600 hover:bg-amber-500 text-white font-semibold px-6 py-2.5 rounded-xl transition flex items-center gap-2 shadow-lg">
-                <span>ดูตะกร้า & สั่งเลย</span>
-                <i data-lucide="chevron-right" class="w-4 h-4"></i>
-            </button>
-        </div>
+        </section>
     </main>
 
-    <!-- ========================================== -->
-    <!-- Modal: ตะกร้าสินค้าฝั่งลูกค้า (Cart Modal)     -->
-    <!-- ========================================== -->
+    <!-- แถบตะกร้าสินค้าลอยด้านล่าง (Floating Cart Bar) -->
+    <div id="floating-cart-bar" class="fixed bottom-4 left-4 right-4 max-w-3xl mx-auto bg-stone-900 text-white p-4 rounded-2xl shadow-2xl border border-stone-700 z-40 transition-transform duration-300 translate-y-32 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="relative bg-amber-600 p-2.5 rounded-xl">
+                <i data-lucide="shopping-bag" class="w-5 h-5 text-white"></i>
+                <span id="cart-badge-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
+            </div>
+            <div>
+                <p class="text-xs text-stone-400">ตะกร้าของ <span id="cart-table-name" class="text-amber-400 font-semibold">โต๊ะ 1</span></p>
+                <p class="text-base sm:text-lg font-bold">รวม ฿<span id="cart-total-price">0</span></p>
+            </div>
+        </div>
+        <button onclick="openCartModal()" class="bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold px-5 py-2.5 rounded-xl text-sm transition shadow-md flex items-center gap-2">
+            <span>ดูตะกร้า & สั่งอาหาร</span>
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </button>
+    </div>
+
+    <!-- Modal: ตะกร้าสินค้าและการยืนยันคำสั่งซื้อ -->
     <div id="cart-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-5 bg-stone-900 text-white flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                    <i data-lucide="shopping-bag" class="w-5 h-5 text-amber-500"></i>
-                    <h3 class="font-bold text-lg">รายการที่เลือก (<span id="modal-table-label">โต๊ะ 1</span>)</h3>
+            <div class="p-5 border-b border-stone-100 flex items-center justify-between bg-stone-50">
+                <div>
+                    <h3 class="text-lg font-bold text-stone-900">สรุปรายการสั่งอาหาร</h3>
+                    <p class="text-xs text-amber-700 font-medium">สำหรับ: <span id="modal-table-label">โต๊ะ 1</span></p>
                 </div>
-                <button onclick="closeCartModal()" class="p-1.5 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-white">
+                <button onclick="closeCartModal()" class="p-2 rounded-full hover:bg-stone-200 text-stone-500 transition">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            
-            <div id="cart-items-container" class="p-5 overflow-y-auto flex-1 space-y-3">
+
+            <div id="cart-items-container" class="p-5 overflow-y-auto space-y-3 flex-1">
                 <!-- รายการในตะกร้า -->
             </div>
 
-            <div class="p-5 bg-stone-50 border-t border-stone-200 space-y-4">
+            <div class="p-5 border-t border-stone-100 bg-stone-50 space-y-4">
                 <div>
-                    <label class="text-xs font-medium text-stone-500 block mb-1">หมายเหตุถึงร้านค้า (เช่น หวานน้อย, ไม่ใส่ผัก)</label>
+                    <label class="block text-xs font-medium text-stone-600 mb-1">หมายเหตุถึงร้าน (เช่น หวานน้อย, ไม่ใส่ผัก)</label>
                     <input type="text" id="order-note" placeholder="ระบุรายละเอียดเพิ่มเติม..." class="w-full px-3.5 py-2 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:border-amber-600">
                 </div>
-                <div class="flex items-center justify-between text-lg font-bold">
+                <div class="flex items-center justify-between text-lg font-bold text-stone-900">
                     <span>ยอดชำระทั้งหมด</span>
-                    <span class="text-amber-700 text-2xl">฿<span id="modal-total-price">0</span></span>
+                    <span class="text-amber-700">฿<span id="modal-total-price">0</span></span>
                 </div>
-                <button onclick="submitOrder()" id="btn-submit-order" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base">
+                <button onclick="submitOrder()" id="btn-submit-order" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base">
                     <i data-lucide="send" class="w-5 h-5"></i>
                     <span>ยืนยันส่งออเดอร์เข้าครัวทันที</span>
                 </button>
@@ -350,6 +353,7 @@
                                 <option value="ชา-น้ำผลไม้">ชา-น้ำผลไม้</option>
                                 <option value="โซดา">โซดา</option>
                                 <option value="เฉาก๊วย">เฉาก๊วย</option>
+                                <option value="เพิ่มท็อปปิ้ง">เพิ่มท็อปปิ้ง</option>
                             </select>
                         </div>
                         <div>
@@ -395,12 +399,24 @@
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 pb-4 border-b border-stone-100">
                     <div>
                         <h3 class="text-lg font-bold text-stone-900">รายการเมนูทั้งหมดในร้าน (<span id="merchant-menu-count">0</span>)</h3>
-                        <span class="text-xs text-stone-500">พิมพ์ชื่อเพื่อค้นหา แก้ไขรูปภาพ ราคาขาย หรือต้นทุนได้ทันที</span>
+                        <span class="text-xs text-stone-500">พิมพ์ชื่อเพื่อค้นหา หรือแก้ไขราคาขายและต้นทุนได้ทันที</span>
                     </div>
                     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                         <button type="button" onclick="syncAll18PizzasToMenu()" class="px-3.5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center justify-center gap-1.5 shrink-0">
                             <i data-lucide="pizza" class="w-4 h-4"></i>
                             <span>ซิงค์เมนูพิซซ่า 18 หน้า</span>
+                        </button>
+                        <button type="button" onclick="syncCoffeeMenuToStore()" class="px-3.5 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center justify-center gap-1.5 shrink-0">
+                            <i data-lucide="coffee" class="w-4 h-4"></i>
+                            <span>ซิงค์เมนูกาแฟ 19 รายการ</span>
+                        </button>
+                        <button type="button" onclick="syncTeaMilkMenuToStore()" class="px-3.5 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center justify-center gap-1.5 shrink-0">
+                            <i data-lucide="cup-soda" class="w-4 h-4"></i>
+                            <span>ซิงค์เมนูชา-นม & แนะนำ</span>
+                        </button>
+                        <button type="button" onclick="syncBearFruitSodaGrassJellyMenuToStore()" class="px-3.5 py-2 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center justify-center gap-1.5 shrink-0">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                            <span>ซิงค์นมหมี/ผลไม้/โซดา/เฉาก๊วย</span>
                         </button>
                         <select id="merchant-menu-cat-filter" onchange="renderMerchantMenu()" class="px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-medium text-stone-700 focus:outline-none focus:border-amber-600">
                             <option value="all">ทุกหมวดหมู่</option>
@@ -411,6 +427,7 @@
                             <option value="coffee:ชา-น้ำผลไม้">↳ ชา-น้ำผลไม้</option>
                             <option value="coffee:โซดา">↳ โซดา</option>
                             <option value="coffee:เฉาก๊วย">↳ เฉาก๊วย</option>
+                            <option value="coffee:เพิ่มท็อปปิ้ง">↳ เพิ่มท็อปปิ้ง</option>
                             <option value="pizza">🍕 พิซซ่า & ของทานเล่น</option>
                         </select>
                         <div class="relative">
@@ -623,53 +640,6 @@
     </main>
 
     <!-- ========================================== -->
-    <!-- Modal: แก้ไขรูปภาพเมนูที่มีอยู่แล้ว          -->
-    <!-- ========================================== -->
-    <div id="edit-menu-image-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col">
-            <div class="p-5 bg-stone-900 text-white flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="image" class="w-5 h-5 text-amber-400"></i>
-                    <h3 class="font-bold text-base">แก้ไขรูปภาพเมนู</h3>
-                </div>
-                <button type="button" onclick="closeEditMenuImageModal()" class="p-1.5 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-white">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <form onsubmit="saveEditedMenuImage(event)" class="p-5 space-y-4">
-                <div>
-                    <p class="text-xs text-stone-500">รายการเมนูที่เลือก</p>
-                    <p id="edit-menu-image-title" class="font-bold text-stone-900 text-base mt-0.5">-</p>
-                </div>
-
-                <div class="border-2 border-dashed border-stone-300 rounded-2xl p-3 text-center hover:bg-stone-50 transition cursor-pointer" onclick="document.getElementById('edit-menu-image-file').click()">
-                    <input type="file" id="edit-menu-image-file" accept="image/*" class="hidden" onchange="previewEditMenuImageFile(event)">
-                    <img id="edit-menu-image-preview" src="" alt="ตัวอย่างรูปเมนู" class="w-full h-44 object-cover rounded-xl bg-stone-100 mx-auto">
-                    <p class="text-xs text-amber-700 font-semibold mt-2 flex items-center justify-center gap-1">
-                        <i data-lucide="upload" class="w-3.5 h-3.5"></i> คลิกเพื่อเลือกรูปใหม่จากเครื่อง
-                    </p>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-stone-600 mb-1">หรือวางลิงก์รูปภาพใหม่ (Image URL)</label>
-                    <input type="url" id="edit-menu-image-url" oninput="previewEditMenuImageUrl(this.value)" placeholder="https://example.com/new-image.jpg" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-xs focus:outline-none focus:border-amber-600">
-                </div>
-
-                <div class="flex gap-2 pt-2">
-                    <button type="button" onclick="closeEditMenuImageModal()" class="flex-1 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold rounded-xl text-sm transition">
-                        ยกเลิก
-                    </button>
-                    <button type="submit" id="btn-save-edit-menu-image" class="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl text-sm transition shadow-md flex items-center justify-center gap-1.5">
-                        <i data-lucide="check" class="w-4 h-4"></i>
-                        <span>บันทึกรูปภาพ</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- ========================================== -->
     <!-- Modal: ยืนยันการลบรายการในบิล (Confirm Item Delete) -->
     <!-- ========================================== -->
     <div id="confirm-item-delete-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -720,15 +690,105 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- Firebase SDK & Application Logic (V.2)       -->
+    <!-- Modal: แก้ไขรูปภาพของเมนูที่มีอยู่แล้ว       -->
+    <!-- ========================================== -->
+    <div id="edit-menu-image-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-stone-100 flex items-center justify-between bg-stone-50">
+                <div class="min-w-0 pr-2">
+                    <h3 class="text-lg font-bold text-stone-900 flex items-center gap-2">
+                        <i data-lucide="image" class="w-5 h-5 text-amber-600"></i>
+                        แก้ไขรูปภาพเมนู
+                    </h3>
+                    <p id="edit-image-menu-name" class="text-xs text-amber-700 font-semibold truncate mt-0.5">ชื่อเมนู</p>
+                </div>
+                <button type="button" onclick="closeEditMenuImageModal()" class="p-2 rounded-full hover:bg-stone-200 text-stone-500 transition shrink-0">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4">
+                <!-- ตัวอย่างรูปภาพปัจจุบัน / รูปภาพใหม่ -->
+                <div class="relative h-48 bg-stone-100 rounded-2xl overflow-hidden border border-stone-200 flex items-center justify-center">
+                    <img id="edit-image-preview" src="" alt="ตัวอย่างรูปภาพเมนู" class="w-full h-full object-cover">
+                    <span class="absolute bottom-2.5 right-2.5 bg-stone-900/75 text-white text-[11px] px-2.5 py-1 rounded-lg backdrop-blur-sm">ตัวอย่างรูปภาพ</span>
+                </div>
+
+                <!-- เลือกอัปโหลดรูปภาพจากเครื่อง -->
+                <div>
+                    <input type="file" id="edit-menu-image-file" accept="image/*" class="hidden" onchange="handleEditImageFileSelect(event)">
+                    <button type="button" onclick="document.getElementById('edit-menu-image-file').click()" class="w-full py-2.5 px-4 border-2 border-dashed border-amber-400 bg-amber-50/70 hover:bg-amber-100/80 text-amber-900 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-2">
+                        <i data-lucide="upload" class="w-4 h-4 text-amber-700"></i>
+                        <span>เลือกรูปภาพใหม่จากเครื่อง (JPG, PNG)</span>
+                    </button>
+                </div>
+
+                <!-- หรือวางลิงก์รูปภาพ (Image URL) -->
+                <div>
+                    <label class="block text-xs font-medium text-stone-600 mb-1">หรือวางลิงก์รูปภาพ (Image URL)</label>
+                    <input type="url" id="edit-menu-image-url" oninput="handleEditImageUrlInput(this.value)" placeholder="https://example.com/new-image.jpg" class="w-full px-3.5 py-2 border border-stone-300 rounded-xl text-xs focus:outline-none focus:border-amber-600">
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="closeEditMenuImageModal()" class="flex-1 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold rounded-xl text-sm transition">
+                        ยกเลิก
+                    </button>
+                    <button type="button" id="btn-save-edited-image" onclick="saveEditedMenuImage()" class="flex-1 py-2.5 bg-stone-900 hover:bg-amber-600 text-white font-semibold rounded-xl text-sm transition shadow-md flex items-center justify-center gap-1.5">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>บันทึกรูปภาพ</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Firebase SDK & Application Logic           -->
     <!-- ========================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // ประกาศฟังก์ชันหลักบน window ทันทีเพื่อป้องกัน ReferenceError หากผู้ใช้คลิกปุ่มระหว่างโหลดข้อมูล
+        window.filterCategory = function(cat) {
+            currentCategory = cat;
+            currentSubCategory = 'all';
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.className = "cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-white text-stone-700 hover:bg-stone-100 border border-stone-200 transition flex items-center gap-1.5";
+            });
+            const activeBtn = document.getElementById(`cat-${cat}`);
+            if (activeBtn) {
+                activeBtn.className = "cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-stone-900 text-white shadow-sm transition flex items-center gap-1.5";
+            }
+
+            const subcatBar = document.getElementById('customer-subcat-bar');
+            if (subcatBar) {
+                if (cat === 'coffee') {
+                    subcatBar.classList.remove('hidden');
+                    updateSubCatButtonsUI('all');
+                } else {
+                    subcatBar.classList.add('hidden');
+                }
+            }
+            if (typeof window.renderCustomerMenu === 'function') {
+                window.renderCustomerMenu();
+            }
+        };
+
+        window.filterSubCategory = function(subCat) {
+            currentSubCategory = subCat;
+            updateSubCatButtonsUI(subCat);
+            if (typeof window.renderCustomerMenu === 'function') {
+                window.renderCustomerMenu();
+            }
+        };
+
         // 1. ตั้งค่า Firebase (รองรับทั้งใน Environment นี้ และเมื่อนำไปอัปโหลดขึ้น GitHub)
-        const FALLBACK_FIREBASE_CONFIG = {};
+        const FALLBACK_FIREBASE_CONFIG = {
+            // หากต้องการเชื่อมต่อข้ามเครื่องบน GitHub สามารถนำค่าจาก Firebase Console มาวางแทนตรงนี้ได้ครับ
+            // apiKey: "...", authDomain: "...", projectId: "...", storageBucket: "...", messagingSenderId: "...", appId: "..."
+        };
 
         let firebaseConfig = null;
         if (typeof __firebase_config !== 'undefined' && __firebase_config) {
@@ -741,7 +801,7 @@
             firebaseConfig = FALLBACK_FIREBASE_CONFIG;
         }
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'baansuan-cafe-pizza-v2';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'baansuan-cafe-pizza';
 
         let app = null;
         let auth = null;
@@ -756,15 +816,13 @@
         let currentTable = 'โต๊ะ 1';
         let currentCategory = 'all';
         let currentSubCategory = 'all';
-        const DRINK_SUBCATEGORIES = ['กาแฟ', 'ชา-นม', 'นมหมี', 'ชา-น้ำผลไม้', 'โซดา', 'เฉาก๊วย'];
+        const DRINK_SUBCATEGORIES = ['กาแฟ', 'ชา-นม', 'นมหมี', 'ชา-น้ำผลไม้', 'โซดา', 'เฉาก๊วย', 'เพิ่มท็อปปิ้ง'];
         let uploadedImageBase64 = '';
-        let editingMenuId = null;
-        let editedMenuImageBase64 = '';
         let isFirstOrderLoad = true;
         let isMerchantAuthenticated = false;
-        const MERCHANT_PIN = '1234';
+        const MERCHANT_PIN = '1234'; // รหัสผ่านสำหรับเจ้าของร้าน/พนักงาน
 
-        // รหัสเซสชันเฉพาะของลูกค้าแต่ละคน
+        // รหัสเซสชันเฉพาะของลูกค้าแต่ละคน (ป้องกันไม่ให้เห็นออเดอร์เก่าของลูกค้าคนก่อนหน้า)
         const customerSessionId = (() => {
             try {
                 let sid = sessionStorage.getItem('baansuan_customer_session_id');
@@ -794,7 +852,7 @@
             } catch (e) {}
         }
 
-        // สร้างภาพหน้าพิซซ่าเฉพาะตัวสำหรับแต่ละหน้า
+        // สร้างภาพหน้าพิซซ่าเฉพาะตัวสำหรับแต่ละหน้า (No base64 / ใช้ภาพ Unsplash คมชัดคู่กับป้ายหน้าพิซซ่าแต่ละชนิด)
         const PIZZA_IMAGES = {
             seafood: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=85",
             seafoodCocktail: "https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?auto=format&fit=crop&w=600&q=85",
@@ -838,38 +896,211 @@
             { name: "18. พิซซ่าปูอัด+แฮม+ผักโขมชีส", category: "pizza", price: 299, cost: 118, desc: "รวมความอร่อย 3 หน้า ปูอัด แฮมรมควัน และผักโขมอบชีสเต็มคำ", image: PIZZA_IMAGES.crabHamSpinach }
         ];
 
+        // รูปภาพประกอบเมนูกาแฟแต่ละชนิด
+        const COFFEE_IMAGES = {
+            americano: "https://images.unsplash.com/photo-1551030173-122aabc4489c?auto=format&fit=crop&w=600&q=85",
+            americanoHoney: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=85",
+            americanoHoneyLemon: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=85",
+            americanoMint: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=600&q=85",
+            americanoPeach: "https://images.unsplash.com/photo-1497515114629-f71d768fd07c?auto=format&fit=crop&w=600&q=85",
+            americanoStrawberry: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=600&q=85",
+            americanoCoconut: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=85",
+            americanoOrange: "https://images.unsplash.com/photo-1577968897966-3d4325b36b61?auto=format&fit=crop&w=600&q=85",
+            americanoSoda: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=600&q=85",
+            espresso: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=85",
+            latte: "https://images.unsplash.com/photo-1570968915860-54d5c301fa9f?auto=format&fit=crop&w=600&q=85",
+            cappuccino: "https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=600&q=85",
+            mocha: "https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?auto=format&fit=crop&w=600&q=85",
+            caramelMacchiato: "https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=600&q=85",
+            latteMint: "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=600&q=85",
+            latteButterflyPea: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=85",
+            latteStrawberry: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=600&q=85",
+            extraShot: "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=600&q=85"
+        };
+
+        // เมนูหมวดกาแฟและกาแฟนมตามป้ายเมนูร้านบ้านสวน (19 รายการ + เพิ่มช็อตกาแฟ)
+        const coffee19Menus = [
+            // กลุ่มกาแฟดำ / กาแฟผลไม้
+            { name: "อเมริกาโน่", category: "coffee", subCategory: "กาแฟ", price: 45, cost: 16, desc: "กาแฟดำคั่วหอมเข้ม สดชื่นกลมกล่อม", image: COFFEE_IMAGES.americano },
+            { name: "อเมริกาโน่น้ำผึ้ง", category: "coffee", subCategory: "กาแฟ", price: 45, cost: 18, desc: "อเมริกาโน่หอมเข้มผสานความหวานละมุนจากน้ำผึ้งแท้", image: COFFEE_IMAGES.americanoHoney },
+            { name: "อเมริกาโน่มะนาวน้ำผึ้ง", category: "coffee", subCategory: "กาแฟ", price: 45, cost: 19, desc: "เปรี้ยวหวานสดชื่นลงตัวกับช็อตกาแฟคั่วหอม", image: COFFEE_IMAGES.americanoHoneyLemon },
+            { name: "อเมริกาโน่มิ้นท์", category: "coffee", subCategory: "กาแฟ", price: 45, cost: 18, desc: "กาแฟดำเย็นฉ่ำหอมกลิ่นใบมิ้นท์สดชื่น", image: COFFEE_IMAGES.americanoMint },
+            { name: "อเมริกาโน่พีช", category: "coffee", subCategory: "กาแฟ", price: 45, cost: 19, desc: "กาแฟคั่วหอมตัดกับความหอมหวานฉ่ำของพีช", image: COFFEE_IMAGES.americanoPeach },
+            { name: "อเมริกาโน่สตรอเบอร์รี่", category: "coffee", subCategory: "กาแฟ", price: 45, cost: 19, desc: "รสเปรี้ยวอมหวานของสตรอเบอร์รี่ผสานช็อตเอสเปรสโซ่", image: COFFEE_IMAGES.americanoStrawberry },
+            { name: "อเมริกาโน่มะพร้าว", category: "coffee", subCategory: "กาแฟ", price: 45, cost: 20, desc: "น้ำมะพร้าวหอมหวานธรรมชาติท็อปด้วยช็อตกาแฟเข้มข้น", image: COFFEE_IMAGES.americanoCoconut },
+            { name: "อเมริกาโน่ส้ม", category: "coffee", subCategory: "กาแฟ", price: 45, cost: 19, desc: "น้ำส้มคั้นสดชื่นตัดกับรสเข้มของอเมริกาโน่", image: COFFEE_IMAGES.americanoOrange },
+            { name: "อเมริกาโน่โซดา", category: "coffee", subCategory: "กาแฟ", price: 50, cost: 19, desc: "ซาบซ่าสดชื่นด้วยโซดาผสานช็อตกาแฟหอมกรุ่น", image: COFFEE_IMAGES.americanoSoda },
+            { name: "อเมริกาโน่ส้มโซดา", category: "coffee", subCategory: "กาแฟ", price: 55, cost: 21, desc: "ความซ่าของส้มโซดาตัดกับกาแฟเข้มข้น ดื่มแล้วตื่นทันที", image: COFFEE_IMAGES.americanoOrange },
+
+            // กลุ่มกาแฟนม
+            { name: "เอสเพรสโซ่", category: "coffee", subCategory: "กาแฟ", price: 45, cost: 18, desc: "กาแฟเย็นสไตล์ไทย เข้มข้นหวานมันถึงใจ", image: COFFEE_IMAGES.espresso },
+            { name: "ลาเต้", category: "coffee", subCategory: "กาแฟ", price: 45, cost: 18, desc: "ช็อตเอสเปรสโซ่ผสมนมสดแท้ หอมนุ่มละมุน", image: COFFEE_IMAGES.latte },
+            { name: "คาปูชิโน่", category: "coffee", subCategory: "กาแฟ", price: 45, cost: 18, desc: "กาแฟนมเข้มข้นท็อปด้วยฟองนมเนียนนุ่ม", image: COFFEE_IMAGES.cappuccino },
+            { name: "มอคค่า", category: "coffee", subCategory: "กาแฟ", price: 45, cost: 19, desc: "กาแฟผสมโกโก้เข้มข้น หอมมันลงตัว", image: COFFEE_IMAGES.mocha },
+            { name: "ลาเต้มะพร้าว", category: "coffee", subCategory: "กาแฟ", price: 50, cost: 21, desc: "ลาเต้นมสดหอมกลิ่นมะพร้าวละมุนลิ้น", image: COFFEE_IMAGES.americanoCoconut },
+            { name: "คาราเมลมัคคิอาโต้", category: "coffee", subCategory: "กาแฟ", price: 50, cost: 21, desc: "นมสดฟองนุ่มราดซอสคาราเมลหอมหวานตัดกับช็อตกาแฟ", image: COFFEE_IMAGES.caramelMacchiato },
+            { name: "ลาเต้มิ้นท์", category: "coffee", subCategory: "กาแฟ", price: 50, cost: 20, desc: "กาแฟนมเย็นชื่นใจ หอมกลิ่นมิ้นท์สดชื่น", image: COFFEE_IMAGES.latteMint },
+            { name: "ลาเต้อัญชัน", category: "coffee", subCategory: "กาแฟ", price: 50, cost: 20, desc: "นมดอกอัญชันสีสวยแยกชั้นกับช็อตกาแฟหอมกรุ่น", image: COFFEE_IMAGES.latteButterflyPea },
+            { name: "ลาเต้สตรอเบอร์รี่", category: "coffee", subCategory: "กาแฟ", price: 55, cost: 22, desc: "นมสดซอสสตรอเบอร์รี่หอมหวานท็อปด้วยช็อตเอสเปรสโซ่", image: COFFEE_IMAGES.latteStrawberry },
+            { name: "เพิ่มช็อตกาแฟ", category: "coffee", subCategory: "เพิ่มท็อปปิ้ง", price: 20, cost: 8, desc: "ตัวเลือกเสริม: เพิ่มช็อตเอสเปรสโซ่เข้มข้น +1 ช็อต", image: COFFEE_IMAGES.extraShot }
+        ];
+
+        // รูปภาพประกอบเมนูชา-นม เมนูแนะนำ และท็อปปิ้ง
+        const TEA_MILK_IMAGES = {
+            thaiTea: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=85",
+            greenTea: "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=600&q=85",
+            ovaltine: "https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?auto=format&fit=crop&w=600&q=85",
+            freshMilk: "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=85",
+            taroMilk: "https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=600&q=85",
+            cantaloupeMilk: "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=600&q=85",
+            pinkMilk: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=600&q=85",
+            cocoa: "https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed?auto=format&fit=crop&w=600&q=85",
+            brownSugarMilk: "https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=600&q=85",
+            coconutMilk: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=85",
+            caramelMilk: "https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=600&q=85",
+            blueberryMilk: "https://images.unsplash.com/photo-1553530666-ba11a7da3888?auto=format&fit=crop&w=600&q=85",
+            strawberryMilk: "https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=600&q=85",
+            mintMilk: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=600&q=85",
+            oliang: "https://images.unsplash.com/photo-1551030173-122aabc4489c?auto=format&fit=crop&w=600&q=85",
+            matcha: "https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=600&q=85",
+            pangYen: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=600&q=85",
+            topping: "https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=600&q=85",
+            m150Smoothie: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=85"
+        };
+
+        // เมนูชา-นม เมนูแนะนำ และเพิ่มท็อปปิ้งตามป้ายเมนูร้านบ้านสวน
+        const teaMilk44Menus = [
+            // เมนูชา-นม (23 รายการ)
+            { name: "ชาไทย", category: "coffee", subCategory: "ชา-นม", price: 30, cost: 12, desc: "ชาไทยแท้ชงสด หอมเข้มข้นหวานมัน", image: TEA_MILK_IMAGES.thaiTea },
+            { name: "ชาเขียว", category: "coffee", subCategory: "ชา-นม", price: 30, cost: 12, desc: "ชาเขียวนมสดหอมละมุน ชื่นใจ", image: TEA_MILK_IMAGES.greenTea },
+            { name: "โอวัลติน", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 14, desc: "โอวัลตินเย็นเข้มข้น หวานมันกลมกล่อม", image: TEA_MILK_IMAGES.ovaltine },
+            { name: "นมสด", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 14, desc: "นมสดแท้แช่เย็น หอมมันละมุน", image: TEA_MILK_IMAGES.freshMilk },
+            { name: "เผือกนม", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 14, desc: "นมสดรสเผือกหอมหวานละมุนลิ้น", image: TEA_MILK_IMAGES.taroMilk },
+            { name: "แคนตาลูปนม", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 14, desc: "แคนตาลูปหอมหวานผสานนมสดเย็นชื่นใจ", image: TEA_MILK_IMAGES.cantaloupeMilk },
+            { name: "นมชมพู", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 13, desc: "นมเย็นสีชมพูหอมหวานสไตล์คลาสสิก", image: TEA_MILK_IMAGES.pinkMilk },
+            { name: "กาแฟเนส", category: "coffee", subCategory: "กาแฟ", price: 35, cost: 13, desc: "กาแฟเนสชงเย็น เข้มข้นถึงใจ", image: TEA_MILK_IMAGES.oliang },
+            { name: "โกโก้", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 14, desc: "โกโก้แท้เข้มข้น หวานมันกำลังดี", image: TEA_MILK_IMAGES.cocoa },
+            { name: "ไมโล", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 14, desc: "ไมโลเย็นเข้มข้น หอมกลิ่นมอลต์", image: TEA_MILK_IMAGES.ovaltine },
+            { name: "บราวชูก้านมสด", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 15, desc: "นมสดแท้ราดซอสบราวชูก้าหอมหวาน", image: TEA_MILK_IMAGES.brownSugarMilk },
+            { name: "มะพร้าวนมสด", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 15, desc: "น้ำมะพร้าวหอมหวานปั่นผสานนมสดแท้", image: TEA_MILK_IMAGES.coconutMilk },
+            { name: "คาราเมลนมสด", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 15, desc: "นมสดหอมกลิ่นคาราเมลนุ่มละมุน", image: TEA_MILK_IMAGES.caramelMilk },
+            { name: "นมสดน้ำผึ้ง", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 15, desc: "นมสดแท้ผสมน้ำผึ้งดอกไม้ป่าหอมหวาน", image: TEA_MILK_IMAGES.freshMilk },
+            { name: "โยเกิร์ตนม", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 15, desc: "โยเกิร์ตเปรี้ยวอมหวานผสานนมสดเย็นชื่นใจ", image: TEA_MILK_IMAGES.freshMilk },
+            { name: "บลูเบอรี่นม", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 15, desc: "ซอสบลูเบอรี่เปรี้ยวหวานตัดกับนมสด", image: TEA_MILK_IMAGES.blueberryMilk },
+            { name: "สตอเบอรี่นม", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 15, desc: "นมสดสตอเบอรี่หอมหวานฉ่ำ", image: TEA_MILK_IMAGES.strawberryMilk },
+            { name: "มิ้นท์นม", category: "coffee", subCategory: "ชา-นม", price: 35, cost: 14, desc: "นมสดเย็นซ่าชื่นใจหอมกลิ่นใบมิ้นท์", image: TEA_MILK_IMAGES.mintMilk },
+            { name: "ชาไทยโกโก้นม", category: "coffee", subCategory: "ชา-นม", price: 40, cost: 16, desc: "ชาไทยเข้มข้นท็อปด้วยโกโก้เหนียวหนึบ", image: TEA_MILK_IMAGES.thaiTea },
+            { name: "ชาเขียวโกโก้นม", category: "coffee", subCategory: "ชา-นม", price: 40, cost: 16, desc: "ชาเขียวนมสดแยกชั้นกับโกโก้เข้มข้น", image: TEA_MILK_IMAGES.greenTea },
+            { name: "นมชมพูโกโก้นม", category: "coffee", subCategory: "ชา-นม", price: 40, cost: 16, desc: "นมชมพูหวานละมุนท็อปด้วยโกโก้เข้มข้น", image: TEA_MILK_IMAGES.pinkMilk },
+            { name: "โอเลี้ยง", category: "coffee", subCategory: "ชา-นม", price: 25, cost: 10, desc: "โอเลี้ยงโบราณเย็นเจี๊ยบ ดับกระหาย", image: TEA_MILK_IMAGES.oliang },
+            { name: "กาแฟโบราณ", category: "coffee", subCategory: "กาแฟ", price: 30, cost: 12, desc: "กาแฟโบราณสูตรดั้งเดิม หอมเข้มหวานมัน", image: TEA_MILK_IMAGES.oliang },
+
+            // เมนูแนะนำ (15 รายการ)
+            { name: "มัทฉะมะพร้าว", category: "coffee", subCategory: "ชา-นม", price: 50, cost: 22, desc: "เมนูแนะนำ: น้ำมะพร้าวหอมสดชื่นท็อปด้วยมัทฉะแท้", image: TEA_MILK_IMAGES.matcha },
+            { name: "มัทฉะนมมะพร้าว", category: "coffee", subCategory: "ชา-นม", price: 55, cost: 24, desc: "เมนูแนะนำ: มัทฉะลาเต้หอมกลิ่นมะพร้าวละมุนลิ้น", image: TEA_MILK_IMAGES.matcha },
+            { name: "มัทฉะสตอเบอรี่นมสด", category: "coffee", subCategory: "ชา-นม", price: 55, cost: 24, desc: "เมนูแนะนำ: นมสดสตอเบอรี่แยกชั้นกับมัทฉะแท้", image: TEA_MILK_IMAGES.matcha },
+            { name: "มัทฉะโกโก้นมสด", category: "coffee", subCategory: "ชา-นม", price: 55, cost: 24, desc: "เมนูแนะนำ: ผสานความเข้มข้นของมัทฉะและโกโก้ในแก้วเดียว", image: TEA_MILK_IMAGES.matcha },
+            { name: "มัทฉะลาเต้", category: "coffee", subCategory: "ชา-นม", price: 45, cost: 20, desc: "เมนูแนะนำ: ผงมัทฉะแท้ชงกับนมสดแท้ หอมละมุน", image: TEA_MILK_IMAGES.matcha },
+            { name: "มะพร้าวนมสดอัญชัน", category: "coffee", subCategory: "ชา-นม", price: 55, cost: 22, desc: "เมนูแนะนำ: น้ำมะพร้าวนมสดสีฟ้าสวยจากดอกอัญชันธรรมชาติ", image: TEA_MILK_IMAGES.coconutMilk },
+            { name: "ชาไทยมะพร้าวนม", category: "coffee", subCategory: "ชา-นม", price: 45, cost: 19, desc: "เมนูแนะนำ: ชาไทยเข้มข้นผสานความหอมหวานของมะพร้าวนมสด", image: TEA_MILK_IMAGES.thaiTea },
+            { name: "ชาเขียวมะพร้าวนม", category: "coffee", subCategory: "ชา-นม", price: 45, cost: 19, desc: "เมนูแนะนำ: ชาเขียวนมสดหอมกลิ่นมะพร้าวอ่อน", image: TEA_MILK_IMAGES.greenTea },
+            { name: "มะพร้าวนมโกโก้", category: "coffee", subCategory: "ชา-นม", price: 55, cost: 22, desc: "เมนูแนะนำ: มะพร้าวนมสดท็อปด้วยซอสโกโก้เข้มข้น", image: TEA_MILK_IMAGES.coconutMilk },
+            { name: "โกโก้มิ้นนมสด", category: "coffee", subCategory: "ชา-นม", price: 45, cost: 19, desc: "เมนูแนะนำ: นมมิ้นท์เย็นสดชื่นท็อปด้วยโกโก้เข้มข้น", image: TEA_MILK_IMAGES.mintMilk },
+            { name: "สตอเบอรี่นมสดโกโก้", category: "coffee", subCategory: "ชา-นม", price: 50, cost: 21, desc: "เมนูแนะนำ: นมสดสตอเบอรี่แยกชั้นกับโกโก้เข้มข้น", image: TEA_MILK_IMAGES.strawberryMilk },
+            { name: "นมสดโกโก้ลาวา", category: "coffee", subCategory: "ชา-นม", price: 50, cost: 21, desc: "เมนูแนะนำ: นมสดแท้ราดซอสโกโก้ลาวาเข้มข้นเยิ้มๆ", image: TEA_MILK_IMAGES.cocoa },
+            { name: "นมหมีโกโก้ลาวา", category: "coffee", subCategory: "นมหมี", price: 55, cost: 24, desc: "เมนูแนะนำ: นมหมีปั่นเนียนนุ่มราดโกโก้ลาวาเข้มข้น", image: TEA_MILK_IMAGES.cocoa },
+            { name: "ปังเย็นแก้วกลาง", category: "coffee", subCategory: "ชา-นม", price: 49, cost: 20, desc: "เมนูแนะนำ: น้ำแข็งไสปั่นเนียนนุ่มพร้อมขนมปังและท็อปปิ้ง (แก้วกลาง)", image: TEA_MILK_IMAGES.pangYen },
+            { name: "ปังเย็นแก้วถัง", category: "coffee", subCategory: "ชา-นม", price: 60, cost: 25, desc: "เมนูแนะนำ: ปังเย็นไซส์ใหญ่จุใจ เสิร์ฟในแก้วถังทรงเครื่อง", image: TEA_MILK_IMAGES.pangYen },
+
+            // เพิ่มท็อปปิ้ง & เมนูปั่นพิเศษ (6 รายการ)
+            { name: "เพิ่มท็อปปิ้ง: บุกบราวชูก้าร์", category: "coffee", subCategory: "เพิ่มท็อปปิ้ง", price: 5, cost: 2, desc: "ท็อปปิ้งเสริม: บุกบราวชูก้าร์เคี้ยวหนึบหนับ", image: "https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=600&q=85" },
+            { name: "เพิ่มท็อปปิ้ง: โอริโอ้", category: "coffee", subCategory: "เพิ่มท็อปปิ้ง", price: 10, cost: 4, desc: "ท็อปปิ้งเสริม: โอริโอ้บดกรุบกรอบ", image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=600&q=85" },
+            { name: "เพิ่มท็อปปิ้ง: ปีโป้", category: "coffee", subCategory: "เพิ่มท็อปปิ้ง", price: 10, cost: 4, desc: "ท็อปปิ้งเสริม: เยลลี่ปีโป้หลากสีเคี้ยวเพลิน", image: "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?auto=format&fit=crop&w=600&q=85" },
+            { name: "เพิ่มท็อปปิ้ง: ครีมชีส", category: "coffee", subCategory: "เพิ่มท็อปปิ้ง", price: 20, cost: 9, desc: "ท็อปปิ้งเสริม: วิปครีมชีสหนานุ่ม หอมมันเค็มกำลังดี", image: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=600&q=85" },
+            { name: "ตัวเลือกเสริม: ปั่น", category: "coffee", subCategory: "เพิ่มท็อปปิ้ง", price: 10, cost: 3, desc: "ตัวเลือกเสริม: ปั่นละเอียดเนื้อเนียนนุ่ม (+10 บาท)", image: TEA_MILK_IMAGES.pangYen },
+            { name: "M150 ปีโป้ปั่น", category: "coffee", subCategory: "โซดา", price: 49, cost: 20, desc: "M150 ปั่นเย็นเจี๊ยบพร้อมเยลลี่ปีโป้ เปรี้ยวหวานสดชื่นตื่นเต็มตา", image: TEA_MILK_IMAGES.m150Smoothie }
+        ];
+
+        // รูปภาพประกอบเมนูนมหมี ชา/น้ำผลไม้ โซดา และเฉาก๊วย
+        const EXTRA_DRINK_IMAGES = {
+            bearMilk: "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=85",
+            icedBlackTea: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=85",
+            lemonTea: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=85",
+            peachTea: "https://images.unsplash.com/photo-1497515114629-f71d768fd07c?auto=format&fit=crop&w=600&q=85",
+            appleJuice: "https://images.unsplash.com/photo-1576673442511-7e39b6545c87?auto=format&fit=crop&w=600&q=85",
+            pineappleJuice: "https://images.unsplash.com/photo-1589820296156-2454bb8a6ad1?auto=format&fit=crop&w=600&q=85",
+            orangeJuice: "https://images.unsplash.com/photo-1577968897966-3d4325b36b61?auto=format&fit=crop&w=600&q=85",
+            lycheeJuice: "https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=600&q=85",
+            strawberryJuice: "https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=600&q=85",
+            chrysanthemum: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=600&q=85",
+            watermelon: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=600&q=85",
+            redSoda: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=600&q=85",
+            greenSoda: "https://images.unsplash.com/photo-1536935338788-846bb9981813?auto=format&fit=crop&w=600&q=85",
+            blueHawaiiSoda: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=600&q=85",
+            grassJelly: "https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=600&q=85"
+        };
+
+        // เมนูนมหมี, เมนูชา/น้ำผลไม้, เมนูโซดา และเมนูเฉาก๊วยตามป้ายเมนู (41 รายการ)
+        const bearFruitSodaGrassJelly41Menus = [
+            // เมนูนมหมี (11 รายการ)
+            { name: "นมหมี", category: "coffee", subCategory: "นมหมี", price: 40, cost: 18, desc: "นมตราหมีแท้ปั่นเนียนนุ่ม หอมมันกลมกล่อม", image: EXTRA_DRINK_IMAGES.bearMilk },
+            { name: "นมหมีชาเขียว", category: "coffee", subCategory: "นมหมี", price: 45, cost: 20, desc: "นมหมีปั่นผสานความหอมละมุนของชาเขียว", image: TEA_MILK_IMAGES.greenTea },
+            { name: "นมหมีชาไทย", category: "coffee", subCategory: "นมหมี", price: 45, cost: 20, desc: "นมหมีปั่นคู่ชาไทยเข้มข้น หอมหวานมัน", image: TEA_MILK_IMAGES.thaiTea },
+            { name: "นมหมีน้ำผึ้ง", category: "coffee", subCategory: "นมหมี", price: 45, cost: 20, desc: "นมหมีปั่นผสมน้ำผึ้งแท้ หอมหวานชื่นใจ", image: EXTRA_DRINK_IMAGES.bearMilk },
+            { name: "นมหมีชมพู", category: "coffee", subCategory: "นมหมี", price: 45, cost: 20, desc: "นมหมีปั่นสีชมพูหวานละมุน", image: TEA_MILK_IMAGES.pinkMilk },
+            { name: "นมหมีโอวัลติน", category: "coffee", subCategory: "นมหมี", price: 45, cost: 20, desc: "นมหมีปั่นรสโอวัลตินเข้มข้น", image: TEA_MILK_IMAGES.ovaltine },
+            { name: "นมหมีโกโก้", category: "coffee", subCategory: "นมหมี", price: 45, cost: 20, desc: "นมหมีปั่นผสานโกโก้แท้เข้มข้น", image: TEA_MILK_IMAGES.cocoa },
+            { name: "นมหมีมิ้นท์", category: "coffee", subCategory: "นมหมี", price: 45, cost: 20, desc: "นมหมีปั่นหอมเย็นชื่นใจกลิ่นมิ้นท์", image: TEA_MILK_IMAGES.mintMilk },
+            { name: "นมหมีสตอเบอร์", category: "coffee", subCategory: "นมหมี", price: 45, cost: 20, desc: "นมหมีปั่นรสสตรอเบอร์รี่หอมหวาน", image: TEA_MILK_IMAGES.strawberryMilk },
+            { name: "นมหมีโยเกิร์ต", category: "coffee", subCategory: "นมหมี", price: 45, cost: 20, desc: "นมหมีปั่นคู่โยเกิร์ตเปรี้ยวอมหวานลงตัว", image: EXTRA_DRINK_IMAGES.bearMilk },
+            { name: "นมหมีบลูเบอร์รี", category: "coffee", subCategory: "นมหมี", price: 45, cost: 20, desc: "นมหมีปั่นราดซอสบลูเบอร์รี่เปรี้ยวหวาน", image: TEA_MILK_IMAGES.blueberryMilk },
+
+            // เมนูชา/น้ำผลไม้ (14 รายการ)
+            { name: "ชาดำ", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 30, cost: 11, desc: "ชาดำเย็นหอมชื่นใจ ดับกระหายคลายร้อน", image: EXTRA_DRINK_IMAGES.icedBlackTea },
+            { name: "ชามะนาว", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 35, cost: 13, desc: "ชาหอมเข้มตัดกับน้ำมะนาวคั้นสดเปรี้ยวอมหวาน", image: EXTRA_DRINK_IMAGES.lemonTea },
+            { name: "ชาเขียวมะนาว", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 35, cost: 13, desc: "ชาเขียวใสผสมน้ำมะนาวสด สดชื่นเต็มคำ", image: EXTRA_DRINK_IMAGES.lemonTea },
+            { name: "ชามะนาวน้ำผึ้ง", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 35, cost: 14, desc: "ชามะนาวรสกลมกล่อมหอมหวานน้ำผึ้งแท้", image: EXTRA_DRINK_IMAGES.lemonTea },
+            { name: "ชาเขียวมะนาวน้ำผึ้ง", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 35, cost: 14, desc: "ชาเขียวมะนาวผสมน้ำผึ้ง ชุ่มคอชื่นใจ", image: EXTRA_DRINK_IMAGES.lemonTea },
+            { name: "ชาพีช", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 35, cost: 14, desc: "ชาหอมละมุนกลิ่นพีช หวานสดชื่น", image: EXTRA_DRINK_IMAGES.peachTea },
+            { name: "แอปเปิล", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 35, cost: 14, desc: "น้ำแอปเปิลเย็นชื่นใจ เปรี้ยวหวานกำลังดี", image: EXTRA_DRINK_IMAGES.appleJuice },
+            { name: "สับปะรด", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 35, cost: 14, desc: "น้ำสับปะรดหอมหวานฉ่ำ สดชื่นคลายร้อน", image: EXTRA_DRINK_IMAGES.pineappleJuice },
+            { name: "น้ำส้ม", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 35, cost: 14, desc: "น้ำส้มรสเปรี้ยวอมหวาน เย็นสดชื่น", image: EXTRA_DRINK_IMAGES.orangeJuice },
+            { name: "ลิ้นจี่", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 35, cost: 14, desc: "น้ำลิ้นจี่หอมหวานฉ่ำ ชื่นใจทุกคำ", image: EXTRA_DRINK_IMAGES.lycheeJuice },
+            { name: "สตอเบอรี่", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 35, cost: 14, desc: "น้ำสตรอเบอร์รี่เย็นสดชื่น หวานอมเปรี้ยว", image: EXTRA_DRINK_IMAGES.strawberryJuice },
+            { name: "เก๊กฮวย", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 35, cost: 13, desc: "น้ำเก๊กฮวยต้มหอมดอกเก๊กฮวยแท้ เย็นชื่นใจ", image: EXTRA_DRINK_IMAGES.chrysanthemum },
+            { name: "แตงโม", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 35, cost: 14, desc: "น้ำแตงโมเย็นฉ่ำ หวานสดชื่นดับกระหาย", image: EXTRA_DRINK_IMAGES.watermelon },
+            { name: "เก๊กฮวยมะนาวน้ำผึ้ง", category: "coffee", subCategory: "ชา-น้ำผลไม้", price: 40, cost: 15, desc: "น้ำเก๊กฮวยหอมละมุนผสานมะนาวสดและน้ำผึ้งแท้", image: EXTRA_DRINK_IMAGES.chrysanthemum },
+
+            // เมนูโซดา (10 รายการ)
+            { name: "มะนาวน้ำผึ้งโซดา", category: "coffee", subCategory: "โซดา", price: 35, cost: 13, desc: "น้ำผึ้งมะนาวซาบซ่าด้วยโซดาเย็นเจี๊ยบ", image: EXTRA_DRINK_IMAGES.lemonTea },
+            { name: "มะนาวโซดา", category: "coffee", subCategory: "โซดา", price: 35, cost: 12, desc: "น้ำมะนาวสดตัดกับโซดาซ่า สดชื่นตื่นเต็มตา", image: EXTRA_DRINK_IMAGES.lemonTea },
+            { name: "บ๊วยโซดา", category: "coffee", subCategory: "โซดา", price: 35, cost: 13, desc: "บ๊วยดองรสเค็มอมหวานซาบซ่าด้วยโซดา", image: EXTRA_DRINK_IMAGES.lemonTea },
+            { name: "แดงโซดา", category: "coffee", subCategory: "โซดา", price: 35, cost: 12, desc: "น้ำแดงเฮลซ์บลูบอยซ่าชื่นใจสไตล์คลาสสิก", image: EXTRA_DRINK_IMAGES.redSoda },
+            { name: "แดงมะนาวโซดา", category: "coffee", subCategory: "โซดา", price: 35, cost: 13, desc: "น้ำแดงโซดาบีบมะนาวสด เปรี้ยวหวานซ่าลงตัว", image: EXTRA_DRINK_IMAGES.redSoda },
+            { name: "เขียวโซดา", category: "coffee", subCategory: "โซดา", price: 35, cost: 12, desc: "น้ำเขียวครีมโซดาซาบซ่าหอมหวาน", image: EXTRA_DRINK_IMAGES.greenSoda },
+            { name: "เขียวมะนาวโซดา", category: "coffee", subCategory: "โซดา", price: 35, cost: 13, desc: "น้ำเขียวโซดาตัดเปรี้ยวด้วยมะนาวสดชื่นใจ", image: EXTRA_DRINK_IMAGES.greenSoda },
+            { name: "บลูเบอร์รี่โซดา", category: "coffee", subCategory: "โซดา", price: 35, cost: 13, desc: "บลูเบอร์รี่หอมหวานซ่าสดชื่นด้วยโซดา", image: EXTRA_DRINK_IMAGES.blueHawaiiSoda },
+            { name: "บลูฮาวายโซดา", category: "coffee", subCategory: "โซดา", price: 35, cost: 13, desc: "บลูฮาวายสีฟ้าสดใส เปรี้ยวหวานซาบซ่า", image: EXTRA_DRINK_IMAGES.blueHawaiiSoda },
+            { name: "สตอเบอรี่โซดา", category: "coffee", subCategory: "โซดา", price: 35, cost: 13, desc: "สตรอเบอร์รี่โซดาซ่าหอมหวานสดชื่น", image: EXTRA_DRINK_IMAGES.redSoda },
+
+            // เมนูเฉาก๊วย (6 รายการ)
+            { name: "เฉาก๊วยนมสด", category: "coffee", subCategory: "เฉาก๊วย", price: 40, cost: 16, desc: "เฉาก๊วยเนื้อหนึบหนับในนมสดแท้หอมมัน", image: EXTRA_DRINK_IMAGES.grassJelly },
+            { name: "เฉาก๊วยชาไทย", category: "coffee", subCategory: "เฉาก๊วย", price: 45, cost: 18, desc: "เฉาก๊วยเนื้อนุ่มหนึบเสิร์ฟพร้อมชาไทยเข้มข้น", image: TEA_MILK_IMAGES.thaiTea },
+            { name: "เฉาก๊วยชาเขียว", category: "coffee", subCategory: "เฉาก๊วย", price: 45, cost: 18, desc: "เฉาก๊วยหนึบหนับคู่ชาเขียวนมสดหอมละมุน", image: TEA_MILK_IMAGES.greenTea },
+            { name: "เฉาก๊วยโกโก้", category: "coffee", subCategory: "เฉาก๊วย", price: 45, cost: 18, desc: "เฉาก๊วยเนื้อหนึบราดด้วยโกโก้เข้มข้นหวานมัน", image: TEA_MILK_IMAGES.cocoa },
+            { name: "เฉาก๊วยมิ้นท์", category: "coffee", subCategory: "เฉาก๊วย", price: 45, cost: 18, desc: "เฉาก๊วยเย็นฉ่ำในนมมิ้นท์หอมสดชื่น", image: TEA_MILK_IMAGES.mintMilk },
+            { name: "เฉาก๊วยนมหมี", category: "coffee", subCategory: "เฉาก๊วย", price: 50, cost: 21, desc: "เฉาก๊วยเนื้อหนึบเสิร์ฟพร้อมนมหมีปั่นเนียนนุ่ม", image: EXTRA_DRINK_IMAGES.bearMilk }
+        ];
+
         // เมนูเริ่มต้น (เครื่องดื่ม + พิซซ่าทั้ง 18 หน้า)
         const defaultMenus = [
-            {
-                name: "เอสเปรสโซ่เย็น (Iced Espresso)",
-                category: "coffee",
-                subCategory: "กาแฟ",
-                price: 65,
-                cost: 22,
-                desc: "กาแฟคั่วเข้มหอมกรุ่น รสชาติกลมกล่อมสไตล์ไทย",
-                image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80"
-            },
-            {
-                name: "คาราเมลมัคคิอาโต้ (Caramel Macchiato)",
-                category: "coffee",
-                subCategory: "กาแฟ",
-                price: 85,
-                cost: 30,
-                desc: "นมสดฟองนุ่มราดซอสคาราเมลหอมหวานตัดกับช็อตเอสเปรสโซ่",
-                image: "https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=600&q=80"
-            },
-            {
-                name: "มัทฉะลาเต้เย็น (Iced Matcha Latte)",
-                category: "coffee",
-                subCategory: "ชา-นม",
-                price: 90,
-                cost: 35,
-                desc: "ผงมัทฉะแท้จากญี่ปุ่นชงกับนมสดแท้ หอมละมุน",
-                image: "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=600&q=80"
-            },
+            ...coffee19Menus,
+            ...teaMilk44Menus,
+            ...bearFruitSodaGrassJelly41Menus,
             ...pizza18Menus
         ];
 
+        // ตรวจสอบพารามิเตอร์จาก URL (เช่น ?table=โต๊ะ%202 เมื่อสแกน QR Code หรือ ?mode=pos สำหรับร้านค้า)
         function checkUrlParams() {
             const urlParams = new URLSearchParams(window.location.search);
             const tableParam = urlParams.get('table');
@@ -881,6 +1112,7 @@
                 const lockedBadge = document.getElementById('locked-table-badge');
                 const lockedText = document.getElementById('locked-table-text');
                 
+                // ซ่อนตัวเลือกเปลี่ยนโต๊ะ และล็อกเป็นเลขโต๊ะที่สแกนมา
                 selectEl.classList.add('hidden');
                 lockedBadge.classList.remove('hidden');
                 lockedText.textContent = tableParam;
@@ -893,6 +1125,7 @@
             }
         }
 
+        // เริ่มต้นการทำงานของระบบ
         async function initApp() {
             try {
                 if (typeof lucide !== 'undefined') {
@@ -902,6 +1135,7 @@
                 console.warn("Lucide icon warning:", e);
             }
 
+            // แสดงเมนูเริ่มต้นทันทีเพื่อไม่ให้หน้าเว็บว่างเปล่าแม้เน็ตช้าหรือกำลังเชื่อมต่อ Cloud
             menuItems = defaultMenus.map((m, idx) => ({ id: 'local_' + idx, ...m }));
             renderAll();
 
@@ -911,7 +1145,7 @@
 
             if (firebaseConfig) {
                 try {
-                    app = initializeApp(firebaseConfig);
+                    const app = initializeApp(firebaseConfig);
                     auth = getAuth(app);
                     db = getFirestore(app);
 
@@ -935,7 +1169,7 @@
                     fallbackToLocalState();
                 }
             } else {
-                updateDbStatusBadge(false, "โหมดใช้งานในเครื่อง");
+                updateDbStatusBadge(false, "No Config");
                 fallbackToLocalState();
             }
         }
@@ -944,17 +1178,19 @@
             const el = document.getElementById('db-connection-status');
             if (!el) return;
             if (isConnected) {
-                el.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> <span class="text-emerald-700 font-medium">เชื่อมต่อ Cloud V.2 สำเร็จ</span>`;
+                el.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> <span class="text-emerald-700 font-medium">เชื่อมต่อ Cloud สำเร็จ (รับออเดอร์ข้ามเครื่องได้)</span>`;
             } else {
-                el.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> <span class="text-stone-600 font-medium">${errMsg || 'พร้อมใช้งาน'}</span>`;
+                el.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> <span class="text-red-600 font-medium">ออฟไลน์ (${errMsg}) — กรุณาเปิด Anonymous Auth ใน Firebase</span>`;
             }
         }
 
+        // กรณีไม่มี Firebase Config ให้ทำงานในหน่วยความจำชั่วคราวได้
         function fallbackToLocalState() {
             menuItems = defaultMenus.map((m, idx) => ({ id: 'local_' + idx, ...m }));
             renderAll();
         }
 
+        // เชื่อมต่อข้อมูลแบบ Real-time กับ Firestore
         async function setupFirestoreListeners() {
             if (!currentUser || !db) return;
 
@@ -962,6 +1198,7 @@
             const ordersColRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
             const summariesColRef = collection(db, 'artifacts', appId, 'public', 'data', 'daily_summaries');
 
+            // 1. ตรวจสอบและเพิ่มเมนูเริ่มต้นหากยังว่างเปล่า
             try {
                 const snapshot = await getDocs(menuColRef);
                 if (snapshot.empty) {
@@ -969,18 +1206,24 @@
                         await addDoc(menuColRef, item);
                     }
                 } else {
+                    // อัปเดตเมนูพิซซ่าทั้ง 18 หน้า เมนูกาแฟ 19 รายการ เมนูชา-นม และเมนูนมหมี/ผลไม้/โซดา/เฉาก๊วยเข้าสู่ฐานข้อมูลอัตโนมัติ
                     await syncAll18PizzasToMenu(true);
+                    await syncCoffeeMenuToStore(true);
+                    await syncTeaMilkMenuToStore(true);
+                    await syncBearFruitSodaGrassJellyMenuToStore(true);
                 }
             } catch (err) {
                 console.error("Error seeding default menu:", err);
             }
 
+            // 2. ฟังการเปลี่ยนแปลงของเมนู (Real-time Menu)
             onSnapshot(menuColRef, (snapshot) => {
                 const rawItems = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
 
+                // ตรวจสอบและลบเมนูที่มีชื่อซ้ำกันในฐานข้อมูลออกอัตโนมัติ (เก็บไว้เพียง 1 รายการต่อชื่อเมนู)
                 const seenNames = new Set();
                 const uniqueItems = [];
                 rawItems.forEach(item => {
@@ -1001,14 +1244,17 @@
                 console.error("Menu snapshot error:", error);
             });
 
+            // 3. ฟังการเปลี่ยนแปลงของออเดอร์ (Real-time Orders)
             onSnapshot(ordersColRef, (snapshot) => {
                 const newOrders = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
 
+                // เรียงลำดับตามเวลาล่าสุด
                 newOrders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
+                // แจ้งเตือนเสียง/ข้อความเมื่อมีออเดอร์ใหม่เด้งเข้ามา (เฉพาะเมื่ออยู่ในโหมดร้านค้า)
                 if (!isFirstOrderLoad && newOrders.length > orders.length && isMerchantAuthenticated) {
                     const latest = newOrders[0];
                     if (latest && latest.status === 'pending') {
@@ -1022,11 +1268,13 @@
                 renderMerchantOrders();
                 renderCustomerActiveOrders();
                 renderDailySummary();
+                // บันทึกสรุปยอดขายของวันนี้ลงฐานข้อมูลถาวรอัตโนมัติทุกครั้งที่ออเดอร์อัปเดต
                 autoSyncTodaySummary();
             }, (error) => {
                 console.error("Orders snapshot error:", error);
             });
 
+            // 4. ฟังการเปลี่ยนแปลงของประวัติสรุปยอดขายรายวันที่บันทึกไว้ตลอด
             onSnapshot(summariesColRef, (snapshot) => {
                 savedDailySummaries = snapshot.docs.map(d => ({
                     id: d.id,
@@ -1039,8 +1287,9 @@
             });
         }
 
+        // ระบบซิงค์ข้อมูลเมนู ออเดอร์ และยอดขายอัตโนมัติในพื้นหลังทุกๆ 3 ชั่วโมง (ไม่รีโหลดหน้าเว็บ ไม่รบกวนลูกค้าและหลังร้าน)
         let silentRefreshTimer = null;
-        const SILENT_REFRESH_INTERVAL_MS = 3 * 60 * 60 * 1000;
+        const SILENT_REFRESH_INTERVAL_MS = 3 * 60 * 60 * 1000; // 3 ชั่วโมง (10,800,000 มิลลิวินาที)
 
         async function performSilentBackgroundSync() {
             if (!db || !currentUser) return;
@@ -1055,6 +1304,7 @@
                     getDocs(summariesColRef)
                 ]);
 
+                // ตรวจสอบว่าผู้ใช้ไม่ได้กำลังพิมพ์แก้ไขช่อง input อยู่ในขณะนั้น เพื่อไม่ให้ค่าที่กำลังพิมพ์ถูกเขียนทับ
                 const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
                 const isUserTyping = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select';
 
@@ -1066,10 +1316,13 @@
                     .map(d => ({ id: d.id, ...d.data() }))
                     .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
+                // อัปเดตตะกร้าสินค้าของลูกค้าให้ตรงกับราคา/ชื่อเมนูล่าสุดโดยไม่ล้างรายการที่เลือกไว้
                 if (cart.length > 0) {
                     cart = cart.map(cartItem => {
                         const latestMenu = menuItems.find(m => m.id === cartItem.id);
-                        return latestMenu ? { ...latestMenu, qty: cartItem.qty } : cartItem;
+                        return latestMenu
+                            ? { ...latestMenu, qty: cartItem.qty }
+                            : cartItem;
                     });
                     updateFloatingCart();
                 }
@@ -1097,6 +1350,7 @@
                 performSilentBackgroundSync();
             }, SILENT_REFRESH_INTERVAL_MS);
 
+            // ตรวจสอบทุก 1 นาที เผื่อเปิดหน้าจอร้านค้าค้างไว้ข้ามคืน พอขึ้นวันใหม่ให้รีเซ็ตกระดานออเดอร์เป็น 0 ทันที
             setInterval(() => {
                 const currentDay = getLocalDateString(Date.now());
                 if (currentDay !== lastRenderedBoardDate) {
@@ -1109,13 +1363,14 @@
             }, 60 * 1000);
         }
 
+        // เสียงแจ้งเตือนเบาๆ ด้วย Web Audio API เมื่อมีออเดอร์เข้า (ใช้เสียงดนตรี 4 จังหวะ)
         function playNotificationBeep() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 if (ctx.state === 'suspended') {
                     ctx.resume();
                 }
-                const notes = [523.25, 659.25, 783.99, 1046.50];
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // โน้ต C5 - E5 - G5 - C6
                 notes.forEach((freq, idx) => {
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
@@ -1129,29 +1384,55 @@
                     osc.start(startTime);
                     osc.stop(startTime + 0.45);
                 });
-            } catch (e) {}
+            } catch (e) {
+                // ข้ามหากเบราว์เซอร์บล็อกเสียงอัตโนมัติ
+            }
         }
 
+        // เสียงแจ้งเตือนฝั่งลูกค้าเมื่อกดยืนยันส่งออเดอร์สำเร็จ (ใช้เสียงเดียวกับหลังร้าน)
         function playCustomerOrderSuccessSound() {
             playNotificationBeep();
         }
 
         // ==========================================
-        // ระบบกันหน้าจอดับอัตโนมัติ (Screen Wake Lock)
+        // ระบบกันหน้าจอดับอัตโนมัติ (Screen Wake Lock + Fallback) สำหรับโหมดร้านค้า POS
         // ==========================================
         let screenWakeLock = null;
         let isWakeLockDesired = true;
+        let fallbackWakeInterval = null;
+        let fallbackAudioCtx = null;
 
-        function updateWakeLockUI(isActive, isUnsupported = false) {
+        function startFallbackWakeKeepAlive() {
+            if (fallbackWakeInterval) return;
+            // กระตุ้นเบราว์เซอร์เบาๆ ในพื้นหลังเพื่อป้องกันการพักหน้าจอในเบราว์เซอร์/iFrame ที่ไม่รองรับ WakeLock API
+            fallbackWakeInterval = setInterval(() => {
+                if (!isMerchantAuthenticated || !isWakeLockDesired) return;
+                try {
+                    if (!fallbackAudioCtx) {
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        if (AudioCtx) fallbackAudioCtx = new AudioCtx();
+                    }
+                    if (fallbackAudioCtx && fallbackAudioCtx.state === 'suspended') {
+                        fallbackAudioCtx.resume().catch(() => {});
+                    }
+                } catch (e) {}
+            }, 25000);
+        }
+
+        function stopFallbackWakeKeepAlive() {
+            if (fallbackWakeInterval) {
+                clearInterval(fallbackWakeInterval);
+                fallbackWakeInterval = null;
+            }
+        }
+
+        function updateWakeLockUI(isActive) {
             const badge = document.getElementById('wake-lock-badge');
             const textEl = document.getElementById('wake-lock-text');
             if (!badge || !textEl) return;
 
-            if (isUnsupported) {
-                badge.className = "text-xs bg-stone-700/60 text-stone-300 border border-stone-600 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5";
-                textEl.textContent = "โปรดตั้งค่าจอไม่ให้ดับเอง";
-            } else if (isActive) {
-                badge.className = "text-xs bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition hover:bg-emerald-600/30";
+            if (isActive) {
+                badge.className = "text-xs bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition hover:bg-emerald-600/30 shadow-sm";
                 textEl.textContent = "เปิดจอค้างไว้ (กันหลับ)";
             } else {
                 badge.className = "text-xs bg-stone-800 text-stone-400 border border-stone-700 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition hover:bg-stone-700";
@@ -1161,27 +1442,34 @@
 
         async function requestMerchantWakeLock() {
             if (!isMerchantAuthenticated || !isWakeLockDesired) return;
-            if (!('wakeLock' in navigator)) {
-                updateWakeLockUI(false, true);
-                return;
-            }
-            try {
-                if (screenWakeLock !== null) return;
-                screenWakeLock = await navigator.wakeLock.request('screen');
-                updateWakeLockUI(true);
-                screenWakeLock.addEventListener('release', () => {
+
+            // อัปเดตสถานะปุ่มเป็นเปิดใช้งานทันที และเริ่มระบบป้องกันหน้าจอพักสำรองควบคู่ไปด้วย
+            updateWakeLockUI(true);
+            startFallbackWakeKeepAlive();
+
+            if ('wakeLock' in navigator) {
+                try {
+                    if (screenWakeLock !== null) return;
+                    screenWakeLock = await navigator.wakeLock.request('screen');
+                    screenWakeLock.addEventListener('release', () => {
+                        screenWakeLock = null;
+                        // หากผู้ใช้ยังต้องการเปิดจอค้างไว้ ให้คงสถานะเปิดผ่านระบบสำรองไว้เสมอ
+                        if (isMerchantAuthenticated && isWakeLockDesired) {
+                            updateWakeLockUI(true);
+                        } else {
+                            updateWakeLockUI(false);
+                        }
+                    });
+                } catch (err) {
+                    // กรณีรันในหน้าต่าง Preview/iFrame ที่เบราว์เซอร์บล็อก WakeLock API จะใช้ระบบสำรองทำงานแทนโดยไม่เด้งกลับเป็นปิด
+                    console.warn("Native Wake Lock blocked, using fallback keep-alive:", err);
                     screenWakeLock = null;
-                    if (isMerchantAuthenticated) {
-                        updateWakeLockUI(false);
-                    }
-                });
-            } catch (err) {
-                console.warn("Wake Lock request failed:", err);
-                updateWakeLockUI(false);
+                }
             }
         }
 
         async function releaseMerchantWakeLock() {
+            stopFallbackWakeKeepAlive();
             if (screenWakeLock !== null) {
                 try {
                     await screenWakeLock.release();
@@ -1194,11 +1482,7 @@
         }
 
         window.toggleMerchantWakeLock = async function() {
-            if (!('wakeLock' in navigator)) {
-                showToast("⚠️ เบราว์เซอร์นี้ไม่รองรับการล็อกหน้าจออัตโนมัติ กรุณาตั้งค่าไม่ให้จอพักในเครื่อง", "amber");
-                return;
-            }
-            if (screenWakeLock !== null) {
+            if (isWakeLockDesired) {
                 isWakeLockDesired = false;
                 await releaseMerchantWakeLock();
                 showToast("🌙 ปิดระบบเปิดหน้าจอค้างไว้แล้ว", "stone");
@@ -1209,6 +1493,7 @@
             }
         };
 
+        // ขอ Wake Lock ใหม่อัตโนมัติเมื่อสลับแท็บกลับมาที่หน้าร้านค้า
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && isMerchantAuthenticated && isWakeLockDesired) {
                 requestMerchantWakeLock();
@@ -1216,7 +1501,7 @@
         });
 
         // ==========================================
-        // ฟังก์ชันจัดการ UI และการสลับหน้าจอ
+        // ฟังก์ชันจัดการ UI และการสลับหน้าจอ (ป้องกันลูกค้าเข้าถึงฝั่งร้านค้า)
         // ==========================================
         window.openMerchantAuthModal = function() {
             if (isMerchantAuthenticated) {
@@ -1240,7 +1525,7 @@
                 isMerchantAuthenticated = true;
                 closeMerchantAuthModal();
                 switchMode('merchant');
-                showToast("🔓 เข้าสู่ระบบจัดการร้านค้า V.2 เรียบร้อย", "emerald");
+                showToast("🔓 เข้าสู่ระบบจัดการร้านค้าเรียบร้อย (เปิดจอค้างไว้กันหลับ)", "emerald");
             } else {
                 document.getElementById('pin-error-msg').classList.remove('hidden');
                 document.getElementById('merchant-pin-input').value = '';
@@ -1287,7 +1572,6 @@
             activeBtn.className = "merchant-tab px-4 py-2 rounded-xl font-medium text-sm bg-stone-900 text-white flex items-center gap-2";
             if (tab === 'summary') {
                 renderDailySummary();
-                renderSavedDailySummaries();
             }
             lucide.createIcons();
         };
@@ -1305,41 +1589,23 @@
 
         function updateSubCatButtonsUI(activeSub) {
             document.querySelectorAll('.subcat-btn').forEach(btn => {
-                btn.className = "subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-white text-stone-700 hover:bg-amber-50 border border-stone-200 transition";
+                if (btn.id === 'subcat-เพิ่มท็อปปิ้ง') {
+                    btn.className = "subcat-btn px-3.5 py-1.5 rounded-lg font-bold text-xs whitespace-nowrap bg-gradient-to-r from-amber-100 to-orange-100 text-amber-900 hover:from-amber-200 hover:to-orange-200 border-2 border-amber-400 shadow-sm transition flex items-center gap-1";
+                } else {
+                    btn.className = "subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-white text-stone-700 hover:bg-amber-50 border border-stone-200 transition";
+                }
             });
-            const activeSubBtn = document.getElementById(`subcat-${activeSub}`);
-            if (activeSubBtn) {
-                activeSubBtn.className = "subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-amber-600 text-white shadow-sm transition";
+            const targetBtn = document.getElementById(`subcat-${activeSub}`);
+            if (targetBtn) {
+                if (activeSub === 'เพิ่มท็อปปิ้ง') {
+                    targetBtn.className = "subcat-btn px-3.5 py-1.5 rounded-lg font-bold text-xs whitespace-nowrap bg-gradient-to-r from-amber-600 to-orange-600 text-white border-2 border-amber-700 shadow-md transition flex items-center gap-1";
+                } else {
+                    targetBtn.className = "subcat-btn px-3 py-1.5 rounded-lg font-medium text-xs whitespace-nowrap bg-amber-600 text-white shadow-sm transition";
+                }
             }
         }
 
-        window.filterSubCategory = function(subCat) {
-            currentSubCategory = subCat;
-            updateSubCatButtonsUI(subCat);
-            renderCustomerMenu();
-        };
-
-        window.filterCategory = function(cat) {
-            currentCategory = cat;
-            currentSubCategory = 'all';
-            document.querySelectorAll('.cat-btn').forEach(btn => {
-                btn.className = "cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-white text-stone-700 hover:bg-stone-100 border border-stone-200 transition flex items-center gap-1.5";
-            });
-            const activeBtn = document.getElementById(`cat-${cat}`);
-            activeBtn.className = "cat-btn px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap bg-stone-900 text-white shadow-sm transition flex items-center gap-1.5";
-
-            const subcatBar = document.getElementById('customer-subcat-bar');
-            if (subcatBar) {
-                if (cat === 'coffee') {
-                    subcatBar.classList.remove('hidden');
-                    updateSubCatButtonsUI('all');
-                } else {
-                    subcatBar.classList.add('hidden');
-                }
-            }
-            renderCustomerMenu();
-        };
-
+        // ฟังก์ชันเรียงลำดับเมนูให้แยกหมวดหมู่ชัดเจน (เครื่องดื่ม & กาแฟ ขึ้นก่อน ตามด้วย พิซซ่า เรียงตามเลขหน้า 1-18)
         function getSortedMenuItems(items) {
             return [...items].sort((a, b) => {
                 const catOrderA = a.category === 'coffee' ? 0 : 1;
@@ -1358,18 +1624,27 @@
 
         window.renderCustomerMenu = function() {
             const grid = document.getElementById('customer-menu-grid');
-            const searchQuery = document.getElementById('customer-search').value.toLowerCase();
+            const searchInput = document.getElementById('customer-search');
+            const clearBtn = document.getElementById('btn-clear-customer-search');
+            const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            if (clearBtn) {
+                clearBtn.classList.toggle('hidden', searchQuery.length === 0);
+            }
 
             const filtered = getSortedMenuItems(menuItems).filter(item => {
                 const matchCat = currentCategory === 'all' || item.category === currentCategory;
                 const itemSub = item.subCategory || 'กาแฟ';
                 const matchSubCat = currentCategory !== 'coffee' || currentSubCategory === 'all' || itemSub === currentSubCategory;
-                const matchSearch = item.name.toLowerCase().includes(searchQuery) || (item.desc && item.desc.toLowerCase().includes(searchQuery));
+                const matchSearch = !searchQuery
+                    || (item.name && item.name.toLowerCase().includes(searchQuery))
+                    || (item.desc && item.desc.toLowerCase().includes(searchQuery))
+                    || (item.subCategory && item.subCategory.toLowerCase().includes(searchQuery));
                 return matchCat && matchSubCat && matchSearch;
             });
 
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-12 text-stone-400">ไม่พบเมนูที่ค้นหา</div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-stone-400">ไม่พบเมนูที่ค้นหา "${searchInput ? searchInput.value : ''}"</div>`;
                 return;
             }
 
@@ -1416,6 +1691,15 @@
                 `;
             }).join('');
             lucide.createIcons();
+        };
+
+        window.clearCustomerSearch = function() {
+            const searchInput = document.getElementById('customer-search');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.focus();
+            }
+            renderCustomerMenu();
         };
 
         window.addToCart = function(itemId) {
@@ -1497,10 +1781,66 @@
             `).join('');
         }
 
+        // แสดงสถานะออเดอร์ที่สั่งไปแล้วของลูกค้า (เฉพาะเซสชันปัจจุบันของลูกค้าในวันนี้)
+        function renderCustomerActiveOrders() {
+            const section = document.getElementById('customer-active-orders');
+            const list = document.getElementById('customer-orders-list');
+            if (!section || !list) return;
+
+            const todayStr = getLocalDateString(Date.now());
+            const myOrders = orders.filter(ord => {
+                const isToday = getLocalDateString(ord.createdAt || Date.now()) === todayStr;
+                const isSameTable = ord.table === currentTable;
+                const isOwnSession = ord.customerSessionId === customerSessionId || customerOwnOrderIds.includes(ord.id);
+                return isToday && isSameTable && isOwnSession;
+            });
+
+            if (myOrders.length === 0) {
+                section.classList.add('hidden');
+                list.innerHTML = '';
+                return;
+            }
+
+            section.classList.remove('hidden');
+            list.innerHTML = myOrders.map(ord => {
+                let statusBadge = '';
+                if (ord.status === 'pending') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">⏳ รอร้านรับออเดอร์</span>`;
+                } else if (ord.status === 'preparing') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 animate-pulse">🔥 กำลังชง / อบพิซซ่า</span>`;
+                } else {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">✅ เสิร์ฟเรียบร้อยแล้ว</span>`;
+                }
+
+                return `
+                <div class="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm space-y-2.5">
+                    <div class="flex items-center justify-between border-b border-stone-100 pb-2">
+                        <span class="text-xs text-stone-500 font-medium">เวลา ${ord.timeString || ''} น.</span>
+                        ${statusBadge}
+                    </div>
+                    <ul class="space-y-1 text-sm">
+                        ${(ord.items || []).map(it => `
+                            <li class="flex justify-between text-stone-700">
+                                <span><strong class="text-amber-700">${it.qty}x</strong> ${it.name}</span>
+                                <span class="text-stone-500">฿${Number(it.price || 0) * Number(it.qty || 1)}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <div class="pt-2 border-t border-stone-100 flex justify-between items-center text-sm font-bold">
+                        <span class="text-stone-500">ยอดรวมบิลนี้</span>
+                        <span class="text-amber-700 text-base">฿${Number(ord.total || 0).toLocaleString()}</span>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // ส่งออเดอร์เข้าสู่ระบบร้านค้า
         window.submitOrder = async function() {
             if (cart.length === 0) return;
 
             const btn = document.getElementById('btn-submit-order');
+            if (btn.disabled) return;
             btn.disabled = true;
             btn.innerHTML = `<span>กำลังส่งออเดอร์...</span>`;
 
@@ -1520,7 +1860,7 @@
                 })),
                 total: totalAmount,
                 note: note,
-                status: 'pending',
+                status: 'pending', // pending -> preparing -> completed
                 createdAt: Date.now(),
                 timeString: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
             };
@@ -1528,8 +1868,25 @@
             try {
                 if (db && currentUser) {
                     const ordersColRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
-                    const docRef = await addDoc(ordersColRef, orderData);
-                    rememberCustomerOrderId(docRef.id);
+                    // ตั้งเวลา Timeout 4 วินาที ป้องกันหน้าจอค้างหากสัญญาณเน็ตสะดุด
+                    const addPromise = addDoc(ordersColRef, orderData);
+                    const timeoutPromise = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('ORDER_TIMEOUT')), 4000)
+                    );
+
+                    try {
+                        const docRef = await Promise.race([addPromise, timeoutPromise]);
+                        rememberCustomerOrderId(docRef.id);
+                    } catch (raceErr) {
+                        // หากเกิน 4 วินาที ให้แสดงออเดอร์ทันทีและปล่อยให้ระบบซิงค์เบื้องหลังต่อ
+                        const fallbackId = 'ord_' + Date.now();
+                        rememberCustomerOrderId(fallbackId);
+                        orders.unshift({ id: fallbackId, ...orderData });
+                        renderMerchantOrders();
+                        renderCustomerActiveOrders();
+                        renderDailySummary();
+                        addPromise.then(ref => rememberCustomerOrderId(ref.id)).catch(() => {});
+                    }
                 } else {
                     const localId = 'ord_' + Date.now();
                     rememberCustomerOrderId(localId);
@@ -1552,206 +1909,15 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i data-lucide="send" class="w-5 h-5"></i><span>ยืนยันส่งออเดอร์เข้าครัวทันที</span>`;
-                lucide.createIcons();
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
             }
         };
-
-        function renderCustomerActiveOrders() {
-            const section = document.getElementById('customer-active-orders');
-            const list = document.getElementById('customer-orders-list');
-            const now = Date.now();
-            const todayStr = getLocalDateString(now);
-
-            const tableOrders = orders.filter(o => {
-                const isToday = getLocalDateString(o.createdAt || now) === todayStr;
-                const isSameTable = o.table === currentTable;
-                const isThisSessionOrder = o.customerSessionId === customerSessionId || customerOwnOrderIds.includes(o.id);
-                const isStillActiveOrRecent = o.status !== 'completed' || (now - (o.createdAt || 0) <= 10 * 60 * 1000);
-                return isToday && isSameTable && isThisSessionOrder && isStillActiveOrRecent;
-            });
-
-            if (tableOrders.length === 0) {
-                section.classList.add('hidden');
-                return;
-            }
-
-            section.classList.remove('hidden');
-            list.innerHTML = tableOrders.map(ord => {
-                let statusBadge = '';
-                if (ord.status === 'pending') {
-                    statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">⏳ รอร้านรับออเดอร์</span>`;
-                } else if (ord.status === 'preparing') {
-                    statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">🔥 กำลังชง / อบพิซซ่า</span>`;
-                } else {
-                    statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">✅ เสิร์ฟแล้ว</span>`;
-                }
-
-                return `
-                <div class="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs text-stone-400">สั่งเมื่อ ${ord.timeString || ''} น.</span>
-                        ${statusBadge}
-                    </div>
-                    <ul class="text-sm text-stone-700 space-y-1 mb-2">
-                        ${ord.items.map(i => `<li class="flex justify-between"><span>${i.name} x${i.qty}</span><span>฿${i.price * i.qty}</span></li>`).join('')}
-                    </ul>
-                    <div class="pt-2 border-t border-stone-100 flex justify-between font-bold text-sm">
-                        <span>รวมทั้งสิ้น</span>
-                        <span class="text-amber-700">฿${ord.total}</span>
-                    </div>
-                </div>
-                `;
-            }).join('');
-        }
 
         // ==========================================
-        // ฟังก์ชันฝั่งร้านค้า (Merchant Functions)
+        // ฟังก์ชันจัดการเมนูฝั่งร้านค้า (เพิ่ม/แก้ไข/ซิงค์)
         // ==========================================
-        function compressImageFileToDataUrl(file, callback) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const maxDim = 600;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height && width > maxDim) {
-                        height *= maxDim / width;
-                        width = maxDim;
-                    } else if (height > maxDim) {
-                        width *= maxDim / height;
-                        height = maxDim;
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    callback(canvas.toDataURL('image/jpeg', 0.75));
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        window.previewImageUpload = function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            compressImageFileToDataUrl(file, (dataUrl) => {
-                uploadedImageBase64 = dataUrl;
-                const previewImg = document.getElementById('image-preview-img');
-                previewImg.src = uploadedImageBase64;
-                previewImg.classList.remove('hidden');
-                document.getElementById('image-preview-placeholder').classList.add('hidden');
-                document.getElementById('menu-image-url').value = '';
-            });
-        };
-
-        window.previewImageUrl = function(url) {
-            if (url.trim()) {
-                uploadedImageBase64 = '';
-                const previewImg = document.getElementById('image-preview-img');
-                previewImg.src = url;
-                previewImg.classList.remove('hidden');
-                document.getElementById('image-preview-placeholder').classList.add('hidden');
-            }
-        };
-
-        // เปิดหน้าต่างแก้ไขรูปภาพของเมนูที่มีอยู่แล้ว
-        window.openEditMenuImageModal = function(itemId) {
-            const target = menuItems.find(m => m.id === itemId);
-            if (!target) return;
-
-            editingMenuId = itemId;
-            editedMenuImageBase64 = '';
-
-            document.getElementById('edit-menu-image-title').textContent = target.name;
-            const fileInput = document.getElementById('edit-menu-image-file');
-            if (fileInput) fileInput.value = '';
-
-            const urlInput = document.getElementById('edit-menu-image-url');
-            const previewImg = document.getElementById('edit-menu-image-preview');
-
-            if (target.image && target.image.startsWith('http')) {
-                urlInput.value = target.image;
-            } else {
-                urlInput.value = '';
-            }
-
-            const fallbackImg = target.category === 'pizza'
-                ? 'https://placehold.co/600x400/ea580c/ffffff?text=Pizza'
-                : 'https://placehold.co/600x400/78350f/ffffff?text=Coffee';
-            previewImg.src = target.image || fallbackImg;
-
-            document.getElementById('edit-menu-image-modal').classList.remove('hidden');
-            lucide.createIcons();
-        };
-
-        window.closeEditMenuImageModal = function() {
-            editingMenuId = null;
-            editedMenuImageBase64 = '';
-            document.getElementById('edit-menu-image-modal').classList.add('hidden');
-        };
-
-        window.previewEditMenuImageFile = function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            compressImageFileToDataUrl(file, (dataUrl) => {
-                editedMenuImageBase64 = dataUrl;
-                document.getElementById('edit-menu-image-preview').src = dataUrl;
-                document.getElementById('edit-menu-image-url').value = '';
-            });
-        };
-
-        window.previewEditMenuImageUrl = function(url) {
-            if (url && url.trim()) {
-                editedMenuImageBase64 = '';
-                document.getElementById('edit-menu-image-preview').src = url.trim();
-            }
-        };
-
-        window.saveEditedMenuImage = async function(event) {
-            event.preventDefault();
-            if (!editingMenuId) return;
-
-            const urlVal = document.getElementById('edit-menu-image-url').value.trim();
-            const finalImage = editedMenuImageBase64 || urlVal;
-
-            if (!finalImage) {
-                showToast("⚠️ กรุณาเลือกรูปภาพใหม่หรือกรอกลิงก์รูปภาพ", "amber");
-                return;
-            }
-
-            const btn = document.getElementById('btn-save-edit-menu-image');
-            btn.disabled = true;
-            const targetId = editingMenuId;
-            const targetItem = menuItems.find(m => m.id === targetId);
-            const targetName = targetItem ? targetItem.name : 'เมนู';
-
-            try {
-                if (db && currentUser) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', targetId);
-                    await updateDoc(docRef, { image: finalImage });
-                } else {
-                    if (targetItem) targetItem.image = finalImage;
-                    renderCustomerMenu();
-                    renderMerchantMenu();
-                }
-
-                closeEditMenuImageModal();
-                showToast(`🖼️ อัปเดตรูปภาพของ "${targetName}" เรียบร้อยแล้ว!`, "emerald");
-            } catch (error) {
-                console.error("Edit menu image error:", error);
-                showToast("❌ ไม่สามารถบันทึกรูปภาพได้ กรุณาลองใหม่", "red");
-            } finally {
-                btn.disabled = false;
-            }
-        };
-
         window.toggleAddMenuSubcategory = function() {
             const cat = document.getElementById('menu-category').value;
             const wrapper = document.getElementById('add-menu-subcat-wrapper');
@@ -1760,40 +1926,86 @@
             }
         };
 
+        window.previewImageUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 600;
+                    let w = img.width, h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                        else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    uploadedImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                    const previewImg = document.getElementById('image-preview-img');
+                    previewImg.src = uploadedImageBase64;
+                    previewImg.classList.remove('hidden');
+                    document.getElementById('image-preview-placeholder').classList.add('hidden');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.previewImageUrl = function(url) {
+            const previewImg = document.getElementById('image-preview-img');
+            const placeholder = document.getElementById('image-preview-placeholder');
+            if (url && url.trim().startsWith('http')) {
+                uploadedImageBase64 = '';
+                previewImg.src = url.trim();
+                previewImg.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            } else if (!uploadedImageBase64) {
+                previewImg.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+        };
+
         window.handleAddMenu = async function(event) {
             event.preventDefault();
             const name = document.getElementById('menu-name').value.trim();
             const category = document.getElementById('menu-category').value;
             const subCategory = category === 'coffee' ? document.getElementById('menu-subcategory').value : '';
-            const price = Number(document.getElementById('menu-price').value);
+            const price = Number(document.getElementById('menu-price').value || 0);
             const cost = Number(document.getElementById('menu-cost').value || 0);
             const desc = document.getElementById('menu-desc').value.trim();
             const urlInput = document.getElementById('menu-image-url').value.trim();
 
-            const finalImage = uploadedImageBase64 || urlInput || (
-                category === 'pizza' 
-                ? 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80'
-                : 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80'
-            );
+            const fallbackImg = category === 'pizza'
+                ? 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=85'
+                : 'https://images.unsplash.com/photo-1551030173-122aabc4489c?auto=format&fit=crop&w=600&q=85';
 
-            const newItem = { name, category, subCategory, price, cost, desc, image: finalImage };
+            const newMenu = {
+                name,
+                category,
+                ...(category === 'coffee' ? { subCategory } : {}),
+                price,
+                cost,
+                desc,
+                image: uploadedImageBase64 || urlInput || fallbackImg
+            };
 
             try {
                 if (db && currentUser) {
                     const menuColRef = collection(db, 'artifacts', appId, 'public', 'data', 'menu_items');
-                    await addDoc(menuColRef, newItem);
+                    await addDoc(menuColRef, newMenu);
                 } else {
-                    menuItems.push({ id: 'local_' + Date.now(), ...newItem });
+                    menuItems.push({ id: 'custom_' + Date.now(), ...newMenu });
                     renderCustomerMenu();
                     renderMerchantMenu();
-                    renderDailySummary();
                 }
-
                 document.getElementById('add-menu-form').reset();
-                toggleAddMenuSubcategory();
                 uploadedImageBase64 = '';
                 document.getElementById('image-preview-img').classList.add('hidden');
                 document.getElementById('image-preview-placeholder').classList.remove('hidden');
+                toggleAddMenuSubcategory();
                 showToast(`✅ เพิ่มเมนู "${name}" เรียบร้อยแล้ว!`, 'emerald');
             } catch (error) {
                 console.error("Add menu error:", error);
@@ -1801,117 +2013,176 @@
             }
         };
 
-        window.updateMenuSubCategory = async function(itemId, newSubCategory) {
+        window.updateMenuPrice = async function(itemId, newPrice) {
+            const price = Math.max(0, Number(newPrice || 0));
             try {
                 if (db && currentUser) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId);
-                    await updateDoc(docRef, { subCategory: newSubCategory });
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId), { price });
                 } else {
-                    const target = menuItems.find(m => m.id === itemId);
-                    if (target) target.subCategory = newSubCategory;
-                    renderCustomerMenu();
-                    renderMerchantMenu();
-                }
-                showToast(`✅ เปลี่ยนหมวดย่อยเป็น "${newSubCategory}" แล้ว`, 'emerald');
-            } catch (error) {
-                console.error("Update subcategory error:", error);
-                showToast("❌ ไม่สามารถเปลี่ยนหมวดย่อยได้", 'red');
-            }
-        };
-
-        window.updateMenuPrice = async function(itemId, newPriceVal) {
-            const newPrice = Math.max(1, Number(newPriceVal || 0));
-            try {
-                if (db && currentUser) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId);
-                    await updateDoc(docRef, { price: newPrice });
-                } else {
-                    const target = menuItems.find(m => m.id === itemId);
-                    if (target) target.price = newPrice;
+                    const item = menuItems.find(m => m.id === itemId);
+                    if (item) item.price = price;
                     renderCustomerMenu();
                     renderMerchantMenu();
                     renderDailySummary();
                 }
-                showToast(`✅ บันทึกราคาขายใหม่ ฿${newPrice.toLocaleString()} แล้ว`, 'emerald');
-            } catch (error) {
-                console.error("Update price error:", error);
-                showToast("❌ ไม่สามารถอัปเดตราคาขายได้", 'red');
+                showToast("💰 อัปเดตราคาขายเรียบร้อยแล้ว", 'emerald');
+            } catch (err) {
+                console.error("Update price error:", err);
             }
         };
 
-        window.updateMenuCost = async function(itemId, newCostVal) {
-            const newCost = Math.max(0, Number(newCostVal || 0));
+        window.updateMenuCost = async function(itemId, newCost) {
+            const cost = Math.max(0, Number(newCost || 0));
             try {
                 if (db && currentUser) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId);
-                    await updateDoc(docRef, { cost: newCost });
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId), { cost });
                 } else {
-                    const target = menuItems.find(m => m.id === itemId);
-                    if (target) target.cost = newCost;
+                    const item = menuItems.find(m => m.id === itemId);
+                    if (item) item.cost = cost;
                     renderMerchantMenu();
                     renderDailySummary();
                 }
-                showToast(`✅ บันทึกต้นทุน/ชิ้น ฿${newCost.toLocaleString()} แล้ว`, 'emerald');
-            } catch (error) {
-                console.error("Update cost error:", error);
-                showToast("❌ ไม่สามารถอัปเดตต้นทุนได้", 'red');
+                showToast("📊 อัปเดตต้นทุนต่อชิ้นเรียบร้อยแล้ว", 'emerald');
+            } catch (err) {
+                console.error("Update cost error:", err);
             }
         };
 
+        window.updateMenuSubCategory = async function(itemId, newSubCat) {
+            try {
+                if (db && currentUser) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId), { subCategory: newSubCat });
+                } else {
+                    const item = menuItems.find(m => m.id === itemId);
+                    if (item) item.subCategory = newSubCat;
+                    renderCustomerMenu();
+                    renderMerchantMenu();
+                }
+                showToast(`📂 ย้ายไปหมวด "${newSubCat}" แล้ว`, 'emerald');
+            } catch (err) {
+                console.error("Update subCategory error:", err);
+            }
+        };
+
+        // ฟังก์ชันแก้ไขรูปภาพของเมนูที่มีอยู่แล้ว
+        let editingMenuImageId = null;
+        let editingMenuNewImageBase64 = '';
+
+        window.openEditMenuImageModal = function(itemId) {
+            const item = menuItems.find(m => m.id === itemId);
+            if (!item) return;
+
+            editingMenuImageId = itemId;
+            editingMenuNewImageBase64 = '';
+
+            document.getElementById('edit-image-menu-name').textContent = item.name;
+            document.getElementById('edit-image-preview').src = item.image || '';
+            document.getElementById('edit-menu-image-file').value = '';
+            document.getElementById('edit-menu-image-url').value = (item.image && item.image.startsWith('http')) ? item.image : '';
+
+            document.getElementById('edit-menu-image-modal').classList.remove('hidden');
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        };
+
+        window.closeEditMenuImageModal = function() {
+            document.getElementById('edit-menu-image-modal').classList.add('hidden');
+            editingMenuImageId = null;
+            editingMenuNewImageBase64 = '';
+        };
+
+        window.handleEditImageFileSelect = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 600;
+                    let w = img.width, h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                        else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    editingMenuNewImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                    document.getElementById('edit-image-preview').src = editingMenuNewImageBase64;
+                    document.getElementById('edit-menu-image-url').value = '';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.handleEditImageUrlInput = function(url) {
+            const trimmed = (url || '').trim();
+            if (trimmed.startsWith('http')) {
+                editingMenuNewImageBase64 = '';
+                document.getElementById('edit-image-preview').src = trimmed;
+            }
+        };
+
+        window.saveEditedMenuImage = async function() {
+            if (!editingMenuImageId) return;
+            const urlVal = document.getElementById('edit-menu-image-url').value.trim();
+            const finalImage = editingMenuNewImageBase64 || (urlVal.startsWith('http') ? urlVal : '');
+
+            if (!finalImage) {
+                showToast("⚠️ กรุณาเลือกรูปภาพใหม่จากเครื่อง หรือวางลิงก์รูปภาพ (https://...)", "amber");
+                return;
+            }
+
+            const btn = document.getElementById('btn-save-edited-image');
+            btn.disabled = true;
+            btn.innerHTML = `<span>กำลังบันทึก...</span>`;
+
+            try {
+                if (db && currentUser) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', editingMenuImageId), {
+                        image: finalImage
+                    });
+                } else {
+                    const item = menuItems.find(m => m.id === editingMenuImageId);
+                    if (item) item.image = finalImage;
+                    renderCustomerMenu();
+                    renderMerchantMenu();
+                }
+                closeEditMenuImageModal();
+                showToast("🖼️ อัปเดตรูปภาพเมนูเรียบร้อยแล้ว!", "emerald");
+            } catch (err) {
+                console.error("Update menu image error:", err);
+                showToast("❌ ไม่สามารถบันทึกรูปภาพได้ กรุณาลองใหม่", "red");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>บันทึกรูปภาพ</span>`;
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+        };
+
+        // ซิงค์เมนูพิซซ่าทั้ง 18 หน้าเข้าสู่ฐานข้อมูลร้าน
         window.syncAll18PizzasToMenu = async function(silent = false) {
-            const oldSampleNames = [
-                "พิซซ่าเปปเปอโรนีชีส (Pepperoni Pizza)",
-                "พิซซ่าฮาวายเอี้ยน (Hawaiian Pizza)",
-                "พิซซ่าทรัฟเฟิลเห็ดรวม (Truffle Mushroom)"
-            ];
-
             try {
                 if (db && currentUser) {
                     const menuColRef = collection(db, 'artifacts', appId, 'public', 'data', 'menu_items');
                     const snapshot = await getDocs(menuColRef);
                     const existingDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
-                    const keptNames = new Set();
-                    const uniqueDocs = [];
-                    for (const docItem of existingDocs) {
-                        const cleanName = (docItem.name || '').trim();
-                        if (oldSampleNames.includes(docItem.name) || (cleanName && keptNames.has(cleanName))) {
-                            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', docItem.id));
-                        } else {
-                            if (cleanName) keptNames.add(cleanName);
-                            uniqueDocs.push(docItem);
-                        }
-                    }
-
                     for (const pItem of pizza18Menus) {
-                        const found = uniqueDocs.find(d => (d.name || '').trim() === pItem.name);
+                        const found = existingDocs.find(d => (d.name || '').trim() === pItem.name);
                         if (!found) {
                             await addDoc(menuColRef, pItem);
-                        } else if (
-                            !found.image ||
-                            found.image.includes('photo-1565299507177-b0ac66763828') ||
-                            found.image.includes('photo-1565299585323-38d6b0865b47') ||
-                            found.image.startsWith('data:image/svg+xml')
-                        ) {
-                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', found.id), {
-                                image: pItem.image,
-                                price: pItem.price
-                            });
                         }
                     }
                 } else {
-                    menuItems = menuItems.filter(m => !oldSampleNames.includes(m.name));
                     pizza18Menus.forEach((pItem, idx) => {
-                        const existingLocal = menuItems.find(m => m.name === pItem.name);
-                        if (!existingLocal) {
+                        if (!menuItems.some(m => (m.name || '').trim() === pItem.name)) {
                             menuItems.push({ id: 'pizza18_' + idx, ...pItem });
-                        } else if (
-                            !existingLocal.image ||
-                            existingLocal.image.includes('photo-1565299507177-b0ac66763828') ||
-                            existingLocal.image.includes('photo-1565299585323-38d6b0865b47') ||
-                            existingLocal.image.startsWith('data:image/svg+xml')
-                        ) {
-                            existingLocal.image = pItem.image;
                         }
                     });
                     renderCustomerMenu();
@@ -1919,7 +2190,7 @@
                 }
 
                 if (!silent) {
-                    showToast("🍕 อัปเดตเมนูพิซซ่าครบทั้ง 18 หน้าเรียบร้อยแล้ว!", "emerald");
+                    showToast("🍕 อัปเดตเมนูพิซซ่า 18 หน้าครบทุกรายการเรียบร้อยแล้ว!", "emerald");
                 }
             } catch (error) {
                 console.error("Sync 18 pizzas error:", error);
@@ -1929,6 +2200,153 @@
             }
         };
 
+        // ซิงค์เมนูหมวดกาแฟและกาแฟนมตามป้ายเมนูเข้าสู่ฐานข้อมูลร้าน
+        window.syncCoffeeMenuToStore = async function(silent = false) {
+            const oldSampleCoffeeNames = [
+                "เอสเปรสโซ่เย็น (Iced Espresso)",
+                "คาราเมลมัคคิอาโต้ (Caramel Macchiato)"
+            ];
+
+            try {
+                if (db && currentUser) {
+                    const menuColRef = collection(db, 'artifacts', appId, 'public', 'data', 'menu_items');
+                    const snapshot = await getDocs(menuColRef);
+                    const existingDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                    for (const docItem of existingDocs) {
+                        if (oldSampleCoffeeNames.includes(docItem.name)) {
+                            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', docItem.id));
+                        }
+                    }
+
+                    for (const cItem of coffee19Menus) {
+                        const found = existingDocs.find(d => (d.name || '').trim() === cItem.name);
+                        if (!found) {
+                            await addDoc(menuColRef, cItem);
+                        } else if (found.subCategory !== cItem.subCategory) {
+                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', found.id), {
+                                subCategory: cItem.subCategory
+                            });
+                        }
+                    }
+                } else {
+                    menuItems = menuItems.filter(m => !oldSampleCoffeeNames.includes(m.name));
+                    coffee19Menus.forEach((cItem, idx) => {
+                        const foundLocal = menuItems.find(m => (m.name || '').trim() === cItem.name);
+                        if (!foundLocal) {
+                            menuItems.push({ id: 'coffee19_' + idx, ...cItem });
+                        } else {
+                            foundLocal.subCategory = cItem.subCategory;
+                        }
+                    });
+                    renderCustomerMenu();
+                    renderMerchantMenu();
+                }
+
+                if (!silent) {
+                    showToast("☕ อัปเดตเมนูหมวดกาแฟและกาแฟนมครบทุกรายการเรียบร้อยแล้ว!", "emerald");
+                }
+            } catch (error) {
+                console.error("Sync coffee menu error:", error);
+                if (!silent) {
+                    showToast("❌ ไม่สามารถซิงค์เมนูกาแฟได้ กรุณาลองใหม่", "red");
+                }
+            }
+        };
+
+        // ซิงค์เมนูหมวดชา-นม เมนูแนะนำ และเพิ่มท็อปปิ้งเข้าสู่ฐานข้อมูลร้าน
+        window.syncTeaMilkMenuToStore = async function(silent = false) {
+            const oldSampleTeaNames = [
+                "มัทฉะลาเต้เย็น (Iced Matcha Latte)"
+            ];
+
+            try {
+                if (db && currentUser) {
+                    const menuColRef = collection(db, 'artifacts', appId, 'public', 'data', 'menu_items');
+                    const snapshot = await getDocs(menuColRef);
+                    const existingDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                    for (const docItem of existingDocs) {
+                        if (oldSampleTeaNames.includes(docItem.name)) {
+                            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', docItem.id));
+                        }
+                    }
+
+                    for (const tItem of teaMilk44Menus) {
+                        const found = existingDocs.find(d => (d.name || '').trim() === tItem.name);
+                        if (!found) {
+                            await addDoc(menuColRef, tItem);
+                        } else if (found.subCategory !== tItem.subCategory || (tItem.subCategory === 'เพิ่มท็อปปิ้ง' && found.image !== tItem.image)) {
+                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', found.id), {
+                                subCategory: tItem.subCategory,
+                                ...(tItem.subCategory === 'เพิ่มท็อปปิ้ง' ? { image: tItem.image } : {})
+                            });
+                        }
+                    }
+                } else {
+                    menuItems = menuItems.filter(m => !oldSampleTeaNames.includes(m.name));
+                    teaMilk44Menus.forEach((tItem, idx) => {
+                        const foundLocal = menuItems.find(m => (m.name || '').trim() === tItem.name);
+                        if (!foundLocal) {
+                            menuItems.push({ id: 'teamMilk_' + idx, ...tItem });
+                        } else {
+                            foundLocal.subCategory = tItem.subCategory;
+                            if (tItem.subCategory === 'เพิ่มท็อปปิ้ง') {
+                                foundLocal.image = tItem.image;
+                            }
+                        }
+                    });
+                    renderCustomerMenu();
+                    renderMerchantMenu();
+                }
+
+                if (!silent) {
+                    showToast("🧋 อัปเดตเมนูชา-นม เมนูแนะนำ และท็อปปิ้งครบ 44 รายการเรียบร้อยแล้ว!", "emerald");
+                }
+            } catch (error) {
+                console.error("Sync tea-milk menu error:", error);
+                if (!silent) {
+                    showToast("❌ ไม่สามารถซิงค์เมนูชา-นมได้ กรุณาลองใหม่", "red");
+                }
+            }
+        };
+
+        // ซิงค์เมนูนมหมี ชา/น้ำผลไม้ โซดา และเฉาก๊วย 41 รายการเข้าสู่ฐานข้อมูลร้าน
+        window.syncBearFruitSodaGrassJellyMenuToStore = async function(silent = false) {
+            try {
+                if (db && currentUser) {
+                    const menuColRef = collection(db, 'artifacts', appId, 'public', 'data', 'menu_items');
+                    const snapshot = await getDocs(menuColRef);
+                    const existingDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                    for (const eItem of bearFruitSodaGrassJelly41Menus) {
+                        const found = existingDocs.find(d => (d.name || '').trim() === eItem.name);
+                        if (!found) {
+                            await addDoc(menuColRef, eItem);
+                        }
+                    }
+                } else {
+                    bearFruitSodaGrassJelly41Menus.forEach((eItem, idx) => {
+                        if (!menuItems.some(m => (m.name || '').trim() === eItem.name)) {
+                            menuItems.push({ id: 'extraDrink_' + idx, ...eItem });
+                        }
+                    });
+                    renderCustomerMenu();
+                    renderMerchantMenu();
+                }
+
+                if (!silent) {
+                    showToast("🐻 อัปเดตเมนูนมหมี ชา/น้ำผลไม้ โซดา และเฉาก๊วยครบ 41 รายการเรียบร้อยแล้ว!", "emerald");
+                }
+            } catch (error) {
+                console.error("Sync bear/fruit/soda/grass jelly menu error:", error);
+                if (!silent) {
+                    showToast("❌ ไม่สามารถซิงค์เมนูได้ กรุณาลองใหม่", "red");
+                }
+            }
+        };
+
+        // 3. ลบเมนูออกจากร้าน
         window.deleteMenuItem = async function(itemId) {
             try {
                 if (db && currentUser) {
@@ -1950,10 +2368,10 @@
             if (searchInput) {
                 searchInput.value = '';
             }
-            renderMerchantMenu();
+            window.renderMerchantMenu();
         };
 
-        function renderMerchantMenu() {
+        window.renderMerchantMenu = function() {
             const list = document.getElementById('merchant-menu-list');
             const searchInput = document.getElementById('merchant-menu-search');
             const catFilterEl = document.getElementById('merchant-menu-cat-filter');
@@ -1978,7 +2396,8 @@
                 }
                 const matchText = !searchText
                     || (item.name && item.name.toLowerCase().includes(searchText))
-                    || (item.desc && item.desc.toLowerCase().includes(searchText));
+                    || (item.desc && item.desc.toLowerCase().includes(searchText))
+                    || (item.subCategory && item.subCategory.toLowerCase().includes(searchText));
                 return matchCat && matchText;
             });
 
@@ -2001,12 +2420,11 @@
                 <div class="p-4 rounded-2xl border border-stone-200 bg-stone-50/70 hover:bg-white hover:shadow-sm transition space-y-3">
                     <div class="flex items-start justify-between gap-3">
                         <div class="flex items-center gap-3.5 min-w-0 flex-1">
-                            <div class="relative shrink-0">
-                                <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover bg-stone-200 border border-stone-200/80">
-                                <button type="button" onclick="openEditMenuImageModal('${item.id}')" title="แก้ไขรูปภาพเมนูนี้" class="mt-1 w-full py-1 px-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1 transition">
-                                    <i data-lucide="image-plus" class="w-3 h-3"></i>
-                                    <span>แก้รูป</span>
-                                </button>
+                            <div onclick="openEditMenuImageModal('${item.id}')" title="คลิกเพื่อเปลี่ยนรูปภาพเมนูนี้" class="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-stone-200 border border-stone-200/80 cursor-pointer group">
+                                <img src="${item.image}" class="w-full h-full object-cover group-hover:scale-105 transition">
+                                <div class="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white">
+                                    <i data-lucide="camera" class="w-5 h-5"></i>
+                                </div>
                             </div>
                             <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center gap-1.5">
@@ -2023,10 +2441,10 @@
                                 ${item.desc ? `<p class="text-xs text-stone-500 mt-0.5 line-clamp-1">${item.desc}</p>` : ''}
                             </div>
                         </div>
-                        <div class="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 shrink-0">
-                            <button type="button" onclick="openEditMenuImageModal('${item.id}')" title="แก้ไขรูปภาพเมนูนี้" class="px-2.5 py-1.5 text-xs font-medium text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition flex items-center gap-1">
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <button type="button" onclick="openEditMenuImageModal('${item.id}')" title="เปลี่ยนรูปภาพเมนูนี้" class="px-2.5 py-1.5 text-xs font-medium text-amber-800 bg-amber-100/80 hover:bg-amber-200/80 rounded-xl transition flex items-center gap-1">
                                 <i data-lucide="image" class="w-3.5 h-3.5"></i>
-                                <span>แก้ไขรูป</span>
+                                <span>เปลี่ยนรูป</span>
                             </button>
                             <button onclick="deleteMenuItem('${item.id}')" title="ลบเมนูนี้" class="px-2.5 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition flex items-center gap-1">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -2060,9 +2478,12 @@
                 </div>
                 `;
             }).join('');
-            lucide.createIcons();
-        }
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        };
 
+        // 4. แสดงผลและอัปเดตสถานะออเดอร์ฝั่งร้านค้า (รีเซ็ตตามวัน แสดงเฉพาะออเดอร์ของวันนี้)
         function renderMerchantOrders() {
             const pendingList = document.getElementById('list-orders-pending');
             const preparingList = document.getElementById('list-orders-preparing');
@@ -2158,6 +2579,7 @@
             `;
         }
 
+        // ลบทั้งบิล (แสดงเฉพาะสถานะ รอรับออเดอร์)
         window.deleteWholeOrder = function(orderId) {
             const order = orders.find(o => o.id === orderId);
             if (!order || order.status !== 'pending') return;
@@ -2190,6 +2612,7 @@
             };
         };
 
+        // ลบรายการอาหาร/เครื่องดื่มออกเป็นบางรายการในบิลของลูกค้า
         window.closeConfirmItemDeleteModal = function() {
             document.getElementById('confirm-item-delete-modal').classList.add('hidden');
             const confirmBtn = document.getElementById('btn-confirm-item-delete');
@@ -2262,7 +2685,7 @@
             }
         };
 
-        // สร้าง QR Code สำหรับแต่ละโต๊ะ
+        // 5. สร้าง QR Code สำหรับแต่ละโต๊ะ
         window.resetQrBaseUrl = function() {
             const currentUrl = window.location.href.split('?')[0];
             const inputEl = document.getElementById('qr-base-url-input');
@@ -2283,8 +2706,6 @@
 
         window.generateTableQRCodes = function() {
             const container = document.getElementById('qr-cards-container');
-            if (!container || typeof QRCode === 'undefined') return;
-
             const tables = ['โต๊ะ 1', 'โต๊ะ 2', 'โต๊ะ 3', 'โต๊ะ 4', 'โต๊ะ 5', 'สั่งกลับบ้าน (Takeaway)'];
             const inputEl = document.getElementById('qr-base-url-input');
             const warningEl = document.getElementById('qr-url-warning');
@@ -2296,6 +2717,7 @@
 
             let baseUrl = (inputEl && inputEl.value.trim()) ? inputEl.value.trim().split('?')[0] : rawCurrentUrl;
 
+            // แจ้งเตือนหากยังเป็น URL ของหน้าต่างทดสอบ (Sandbox) ที่กล้องมือถือสแกนไม่ได้
             if (warningEl) {
                 if (!baseUrl.startsWith('http')) {
                     warningEl.classList.remove('hidden');
@@ -2316,6 +2738,7 @@
                 </div>
             `).join('');
 
+            // สร้างภาพ QR Code จริงด้วย QRCode.js
             tables.forEach((tableName, index) => {
                 const targetUrl = `${baseUrl}?table=${encodeURIComponent(tableName)}`;
                 new QRCode(document.getElementById(`qrcode-box-${index}`), {
@@ -2330,8 +2753,43 @@
             lucide.createIcons();
         };
 
+        // แสดง Toast แจ้งเตือนมุมขวาล่าง
+        function showToast(message, color = 'stone') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgClasses = {
+                stone: 'bg-stone-900 text-white border-stone-700',
+                amber: 'bg-amber-600 text-white border-amber-500',
+                emerald: 'bg-emerald-600 text-white border-emerald-500',
+                red: 'bg-red-600 text-white border-red-500'
+            };
+
+            toast.className = `${bgClasses[color] || bgClasses.stone} px-4 py-3 rounded-xl shadow-xl border text-sm font-medium flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.textContent = message;
+            
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function renderAll() {
+            renderCustomerMenu();
+            renderMerchantMenu();
+            renderMerchantOrders();
+            renderCustomerActiveOrders();
+            renderDailySummary();
+            renderSavedDailySummaries();
+        }
+
         // ==========================================
-        // สรุปยอดขาย ต้นทุน และกำไรรายวัน + บันทึกถาวร
+        // 6. สรุปยอดขาย ต้นทุน และกำไรรายวัน (แยกหมวดน้ำ / พิซซ่า) + บันทึกถาวร
         // ==========================================
         function getLocalDateString(timestamp) {
             const d = timestamp ? new Date(timestamp) : new Date();
@@ -2348,6 +2806,7 @@
             }
         }
 
+        // คำนวณสรุปยอดขายของวันที่ระบุ (ใช้ทั้งแสดงผลและบันทึกลงฐานข้อมูล)
         function calculateDailyStats(dateStr) {
             const dayOrders = orders.filter(ord => getLocalDateString(ord.createdAt || Date.now()) === dateStr);
 
@@ -2429,6 +2888,7 @@
             };
         }
 
+        // บันทึกสรุปยอดขายของวันที่เลือกลงฐานข้อมูล Cloud ถาวร
         window.saveDailySummarySnapshot = async function(silent = false) {
             const picker = document.getElementById('summary-date-picker');
             const dateStr = (picker && picker.value) ? picker.value : getLocalDateString(Date.now());
@@ -2455,6 +2915,7 @@
             }
         };
 
+        // บันทึกยอดของวันนี้ลงฐานข้อมูลอัตโนมัติเมื่อมีการสั่งซื้อหรือแก้ไขบิล
         async function autoSyncTodaySummary() {
             const todayStr = getLocalDateString(Date.now());
             const stats = calculateDailyStats(todayStr);
@@ -2520,6 +2981,7 @@
             const selectedDate = picker.value;
             let stats = calculateDailyStats(selectedDate);
 
+            // หากไม่มีออเดอร์สดในวันนั้นแล้ว แต่เคยบันทึกสรุปยอดวันนั้นไว้ในฐานข้อมูล ให้ดึงข้อมูลที่บันทึกไว้มาแสดง
             if (stats.orderCount === 0) {
                 const saved = savedDailySummaries.find(s => s.date === selectedDate);
                 if (saved) {
@@ -2576,40 +3038,7 @@
             }).join('');
         };
 
-        function showToast(message, color = 'stone') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            const bgClasses = {
-                stone: 'bg-stone-900 text-white border-stone-700',
-                amber: 'bg-amber-600 text-white border-amber-500',
-                emerald: 'bg-emerald-600 text-white border-emerald-500',
-                red: 'bg-red-600 text-white border-red-500'
-            };
-
-            toast.className = `${bgClasses[color] || bgClasses.stone} px-4 py-3 rounded-xl shadow-xl border text-sm font-medium flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0`;
-            toast.textContent = message;
-            
-            container.appendChild(toast);
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            });
-
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
-        }
-
-        function renderAll() {
-            renderCustomerMenu();
-            renderMerchantMenu();
-            renderMerchantOrders();
-            renderCustomerActiveOrders();
-            renderDailySummary();
-            renderSavedDailySummaries();
-        }
-
+        // เริ่มทำงานเมื่อโหลดหน้าเว็บเสร็จสมบูรณ์
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
