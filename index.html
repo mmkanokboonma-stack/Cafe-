@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บ้านสวนกาแฟ & พิซซ่าเตาฟืน (บ้านมอเศรษฐี) - ระบบสั่งอาหารและจัดการร้าน</title>
+    <title>บ้านสวนกาแฟ & พิซซ่าเตาฟืน (บ้านมอเศรษฐี) - ระบบสั่งอาหารและจัดการร้าน (ต้นฉบับสำรอง)</title>
     <!-- ไอคอนแอปสำหรับเพิ่มลงหน้าจอโฮม (iPhone / iPad / Android / Browser) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -786,18 +786,24 @@
 
         // 1. ตั้งค่า Firebase (รองรับทั้งใน Environment นี้ และเมื่อนำไปอัปโหลดขึ้น GitHub)
         const FALLBACK_FIREBASE_CONFIG = {
-            // หากต้องการเชื่อมต่อข้ามเครื่องบน GitHub สามารถนำค่าจาก Firebase Console มาวางแทนตรงนี้ได้ครับ
-            // apiKey: "...", authDomain: "...", projectId: "...", storageBucket: "...", messagingSenderId: "...", appId: "..."
+            apiKey: "AIzaSyATsHffYiLARGcs_F2SYCvZ2_I-7xMULWQ",
+            authDomain: "baansuan-cafe-pos.firebaseapp.com",
+            projectId: "baansuan-cafe-pos",
+            storageBucket: "baansuan-cafe-pos.firebasestorage.app",
+            messagingSenderId: "682402512495",
+            appId: "1:682402512495:web:09629d79b1a01cb135979a"
         };
 
         let firebaseConfig = null;
         if (typeof __firebase_config !== 'undefined' && __firebase_config) {
             try {
-                firebaseConfig = JSON.parse(__firebase_config);
+                const parsed = JSON.parse(__firebase_config);
+                if (parsed && parsed.apiKey) firebaseConfig = parsed;
             } catch (e) {
                 console.warn("Invalid __firebase_config", e);
             }
-        } else if (FALLBACK_FIREBASE_CONFIG.apiKey) {
+        }
+        if (!firebaseConfig && FALLBACK_FIREBASE_CONFIG.apiKey) {
             firebaseConfig = FALLBACK_FIREBASE_CONFIG;
         }
 
@@ -2407,7 +2413,7 @@
 
             if (filteredMenus.length === 0) {
                 list.innerHTML = `<div class="text-center py-8 text-sm text-stone-400">ไม่พบรายการเมนูที่ค้นหา</div>`;
-                lucide.createIcons();
+                if (typeof lucide !== 'undefined') lucide.createIcons();
                 return;
             }
 
