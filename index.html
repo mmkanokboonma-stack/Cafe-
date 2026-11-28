@@ -529,12 +529,16 @@
                         </h3>
                         <p class="text-xs text-stone-500 mt-1">คำนวณจากรายการที่สั่งซื้อทั้งหมดในวันที่เลือก (แยกตามหมวดเครื่องดื่มและหมวดพิซซ่า)</p>
                     </div>
-                    <div class="flex items-center gap-2 bg-stone-50 p-2 rounded-xl border border-stone-200">
+                    <div class="flex flex-wrap items-center gap-2 bg-stone-50 p-2 rounded-xl border border-stone-200">
                         <label for="summary-date-picker" class="text-xs font-semibold text-stone-600 pl-2">เลือกวันที่:</label>
                         <input type="date" id="summary-date-picker" onchange="renderDailySummary()" class="px-3 py-1.5 bg-white border border-stone-300 rounded-lg text-sm font-medium text-stone-800 focus:outline-none focus:border-amber-600">
                         <button type="button" onclick="saveDailySummarySnapshot()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition shadow-sm flex items-center gap-1.5">
                             <i data-lucide="save" class="w-3.5 h-3.5"></i>
                             <span>บันทึกยอดวันนี้</span>
+                        </button>
+                        <button type="button" onclick="resetSelectedDaySummary()" class="px-3 py-1.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 text-xs font-semibold rounded-lg transition flex items-center gap-1.5" title="ล้างออเดอร์และรีเซ็ตยอดขายของวันที่เลือกให้เป็น 0">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                            <span>รีเซ็ตยอดวันนี้เป็น 0</span>
                         </button>
                     </div>
                 </div>
@@ -1520,7 +1524,7 @@
                 const currentDay = getLocalDateString(Date.now());
                 if (currentDay !== lastRenderedBoardDate) {
                     lastRenderedBoardDate = currentDay;
-                    setDefaultSummaryDate();
+                    setDefaultSummaryDate(true);
                     renderMerchantOrders();
                     renderCustomerActiveOrders();
                     renderDailySummary();
@@ -1721,6 +1725,7 @@
             const activeBtn = document.getElementById(`tab-merchant-${tab}`);
             activeBtn.className = "merchant-tab px-4 py-2 rounded-xl font-medium text-sm bg-stone-900 text-white flex items-center gap-2";
             if (tab === 'summary') {
+                setDefaultSummaryDate(true);
                 renderDailySummary();
             }
             lucide.createIcons();
@@ -3001,9 +3006,9 @@
             return `${year}-${month}-${day}`;
         }
 
-        function setDefaultSummaryDate() {
+        function setDefaultSummaryDate(forceToday = false) {
             const picker = document.getElementById('summary-date-picker');
-            if (picker && !picker.value) {
+            if (picker && (!picker.value || forceToday)) {
                 picker.value = getLocalDateString(Date.now());
             }
         }
@@ -3117,21 +3122,62 @@
             }
         };
 
-        // บันทึกยอดของวันนี้ลงฐานข้อมูลอัตโนมัติเมื่อมีการสั่งซื้อหรือแก้ไขบิล
+        // บันทึกยอดของวันนี้ลงฐานข้อมูลอัตโนมัติ (รวมถึงเมื่อลบออเดอร์จนเป็น 0 เพื่อไม่ให้ยอดเก่าค้าง)
         async function autoSyncTodaySummary() {
             const todayStr = getLocalDateString(Date.now());
             const stats = calculateDailyStats(todayStr);
-            if (stats.orderCount === 0) return;
 
             try {
                 if (db && currentUser) {
                     const summaryDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'daily_summaries', todayStr);
-                    await setDoc(summaryDocRef, stats);
+                    if (stats.orderCount === 0) {
+                        await deleteDoc(summaryDocRef).catch(() => {});
+                    } else {
+                        await setDoc(summaryDocRef, stats);
+                    }
                 }
             } catch (err) {
                 console.error("Auto sync summary error:", err);
             }
         }
+
+        // รีเซ็ตยอดขายของวันที่เลือกให้เป็น 0 (ลบออเดอร์และสรุปยอดของวันนั้น)
+        window.resetSelectedDaySummary = function() {
+            const picker = document.getElementById('summary-date-picker');
+            const selectedDate = (picker && picker.value) ? picker.value : getLocalDateString(Date.now());
+            const dayOrders = orders.filter(ord => getLocalDateString(ord.createdAt || Date.now()) === selectedDate);
+
+            const modal = document.getElementById('confirm-item-delete-modal');
+            const textEl = document.getElementById('confirm-item-delete-text');
+            const confirmBtn = document.getElementById('btn-confirm-item-delete');
+
+            textEl.textContent = `ต้องการลบออเดอร์ทั้งหมด (${dayOrders.length} บิล) และรีเซ็ตยอดขายของวันที่ ${selectedDate} ให้เป็น 0 ใช่หรือไม่?`;
+            confirmBtn.textContent = 'รีเซ็ตยอดเป็น 0';
+            modal.classList.remove('hidden');
+
+            confirmBtn.onclick = async () => {
+                closeConfirmItemDeleteModal();
+                try {
+                    if (db && currentUser) {
+                        for (const ord of dayOrders) {
+                            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'orders', ord.id));
+                        }
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'daily_summaries', selectedDate)).catch(() => {});
+                    } else {
+                        orders = orders.filter(ord => getLocalDateString(ord.createdAt || Date.now()) !== selectedDate);
+                        savedDailySummaries = savedDailySummaries.filter(s => s.date !== selectedDate);
+                        renderMerchantOrders();
+                        renderCustomerActiveOrders();
+                        renderDailySummary();
+                        renderSavedDailySummaries();
+                    }
+                    showToast(`🔄 รีเซ็ตยอดขายวันที่ ${selectedDate} เป็น 0 เรียบร้อยแล้ว`, 'emerald');
+                } catch (err) {
+                    console.error("Reset summary error:", err);
+                    showToast("❌ ไม่สามารถรีเซ็ตยอดขายได้ กรุณาลองใหม่", 'red');
+                }
+            };
+        };
 
         window.viewSavedSummaryDate = function(dateStr) {
             const picker = document.getElementById('summary-date-picker');
@@ -3181,10 +3227,11 @@
             if (!picker.value) setDefaultSummaryDate();
 
             const selectedDate = picker.value;
+            const todayStr = getLocalDateString(Date.now());
             let stats = calculateDailyStats(selectedDate);
 
-            // หากไม่มีออเดอร์สดในวันนั้นแล้ว แต่เคยบันทึกสรุปยอดวันนั้นไว้ในฐานข้อมูล ให้ดึงข้อมูลที่บันทึกไว้มาแสดง
-            if (stats.orderCount === 0) {
+            // เฉพาะวันย้อนหลัง (ที่ไม่ใช่วันนี้): หากออเดอร์สดถูกเคลียร์ไปแล้ว ให้ดึงประวัติที่บันทึกไว้มาแสดงได้
+            if (stats.orderCount === 0 && selectedDate !== todayStr) {
                 const saved = savedDailySummaries.find(s => s.date === selectedDate);
                 if (saved) {
                     stats = saved;
