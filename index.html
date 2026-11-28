@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บ้านสวนกาแฟ & พิซซ่าเตาฟืน (บ้านมอเศรษฐี) - ระบบสั่งอาหารและจัดการร้าน (ต้นฉบับสำรอง)</title>
+    <title>บ้านสวนกาแฟ & พิซซ่าเตาฟืน (บ้านมอเศรษฐี) - ระบบสั่งอาหารและจัดการร้าน</title>
     <!-- ไอคอนแอปสำหรับเพิ่มลงหน้าจอโฮม (iPhone / iPad / Android / Browser) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -284,9 +284,45 @@
                     <span>สรุปยอดขาย & กำไรรายวัน</span>
                 </button>
             </div>
-            <div id="db-connection-status" class="text-xs text-stone-500 flex items-center gap-1.5 px-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>เชื่อมต่อระบบรับออเดอร์สด</span>
+            <div class="flex items-center gap-2 px-2">
+                <div id="db-connection-status" class="text-xs text-stone-500 flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>เชื่อมต่อระบบรับออเดอร์สด</span>
+                </div>
+                <button type="button" onclick="openFirebaseConfigModal()" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-1 rounded-lg font-medium transition flex items-center gap-1 shrink-0" title="ตั้งค่าการเชื่อมต่อฐานข้อมูลออนไลน์">
+                    <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+                    <span>ตั้งค่า Cloud</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- กล่องตั้งค่า Firebase Config & คำแนะนำเปิด Anonymous Auth (แสดงเมื่อยังไม่ได้ตั้งค่า หรือกดปุ่มตั้งค่า Cloud) -->
+        <div id="firebase-config-setup-banner" class="hidden mb-6 bg-amber-50/90 border border-amber-300 rounded-2xl p-5 shadow-sm space-y-3">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h4 class="text-sm font-bold text-amber-950 flex items-center gap-1.5">
+                        <i data-lucide="database" class="w-4 h-4 text-amber-700"></i>
+                        <span>เชื่อมต่อฐานข้อมูลออนไลน์ (Firebase) เพื่อรับออเดอร์และซิงค์เมนูข้ามเครื่อง</span>
+                    </h4>
+                    <p class="text-xs text-amber-900/80 mt-1 leading-relaxed">
+                        1. ใน Firebase Console ไปที่ <strong>Authentication &gt; Sign-in method</strong> แล้วกดเปิดใช้งาน <strong>Anonymous</strong><br>
+                        2. ไปที่ <strong>Firestore Database</strong> แล้วสร้างฐานข้อมูล (เลือกโหมดทดสอบ/Test mode หรือตั้งกฎให้อ่าน-เขียนได้)<br>
+                        3. คัดลอกค่า <code>firebaseConfig</code> (หรือวางเป็น JSON) มาใส่ด้านล่าง แล้วกดบันทึก ระบบจะจำค่าไว้ในเครื่องนี้และเชื่อมต่อทันที
+                    </p>
+                </div>
+                <button type="button" onclick="toggleFirebaseConfigBanner(false)" class="p-1.5 rounded-lg text-amber-800 hover:bg-amber-200/60 transition shrink-0" title="ซ่อนกล่องนี้ชั่วคราว">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <textarea id="firebase-config-json-input" rows="4" placeholder='วางโค้ด firebaseConfig เช่น {"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}' class="w-full px-3.5 py-2.5 bg-white border border-amber-300 rounded-xl text-xs font-mono focus:outline-none focus:border-amber-600"></textarea>
+            <div class="flex flex-wrap items-center justify-end gap-2">
+                <button type="button" onclick="clearSavedFirebaseConfig()" class="px-3.5 py-2 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-semibold transition">
+                    ล้างค่า Config
+                </button>
+                <button type="button" onclick="saveFirebaseConfigFromInput()" class="px-4 py-2 bg-stone-900 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center gap-1.5">
+                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                    <span>บันทึกและเชื่อมต่อทันที</span>
+                </button>
             </div>
         </div>
 
@@ -745,6 +781,27 @@
     <!-- ========================================== -->
     <!-- Firebase SDK & Application Logic           -->
     <!-- ========================================== -->
+    <script>
+        // ประกาศฟังก์ชันเปิด/ปิดหน้าต่าง PIN ร้านค้าไว้ในระดับ Global ทันทีเพื่อให้กดโลโก้ได้โดยไม่เกิด ReferenceError
+        window.openMerchantAuthModal = function() {
+            if (window.isMerchantAuthenticated && typeof window.switchMode === 'function') {
+                window.switchMode('merchant');
+                return;
+            }
+            const pinInput = document.getElementById('merchant-pin-input');
+            const errMsg = document.getElementById('pin-error-msg');
+            const modal = document.getElementById('merchant-pin-modal');
+            if (pinInput) pinInput.value = '';
+            if (errMsg) errMsg.classList.add('hidden');
+            if (modal) modal.classList.remove('hidden');
+            if (pinInput) setTimeout(() => pinInput.focus(), 100);
+        };
+
+        window.closeMerchantAuthModal = function() {
+            const modal = document.getElementById('merchant-pin-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+    </script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -784,36 +841,6 @@
             }
         };
 
-        // 1. ตั้งค่า Firebase (รองรับทั้งใน Environment นี้ และเมื่อนำไปอัปโหลดขึ้น GitHub)
-        const FALLBACK_FIREBASE_CONFIG = {
-            apiKey: "AIzaSyATsHffYiLARGcs_F2SYCvZ2_I-7xMULWQ",
-            authDomain: "baansuan-cafe-pos.firebaseapp.com",
-            projectId: "baansuan-cafe-pos",
-            storageBucket: "baansuan-cafe-pos.firebasestorage.app",
-            messagingSenderId: "682402512495",
-            appId: "1:682402512495:web:09629d79b1a01cb135979a"
-        };
-
-        let firebaseConfig = null;
-        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-            try {
-                const parsed = JSON.parse(__firebase_config);
-                if (parsed && parsed.apiKey) firebaseConfig = parsed;
-            } catch (e) {
-                console.warn("Invalid __firebase_config", e);
-            }
-        }
-        if (!firebaseConfig && FALLBACK_FIREBASE_CONFIG.apiKey) {
-            firebaseConfig = FALLBACK_FIREBASE_CONFIG;
-        }
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'baansuan-cafe-pizza';
-
-        let app = null;
-        let auth = null;
-        let db = null;
-        let currentUser = null;
-
         // สถานะข้อมูลของแอปพลิเคชัน
         let menuItems = [];
         let orders = [];
@@ -825,7 +852,7 @@
         const DRINK_SUBCATEGORIES = ['กาแฟ', 'ชา-นม', 'นมหมี', 'ชา-น้ำผลไม้', 'โซดา', 'เฉาก๊วย', 'เพิ่มท็อปปิ้ง'];
         let uploadedImageBase64 = '';
         let isFirstOrderLoad = true;
-        let isMerchantAuthenticated = false;
+        window.isMerchantAuthenticated = false;
         const MERCHANT_PIN = '1234'; // รหัสผ่านสำหรับเจ้าของร้าน/พนักงาน
 
         // รหัสเซสชันเฉพาะของลูกค้าแต่ละคน (ป้องกันไม่ให้เห็นออเดอร์เก่าของลูกค้าคนก่อนหน้า)
@@ -1149,33 +1176,164 @@
             generateTableQRCodes();
             setDefaultSummaryDate();
 
-            if (firebaseConfig) {
-                try {
-                    const app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
+            await connectToFirebase();
+        }
 
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
+        // 1. ตั้งค่า Firebase (รองรับทั้งใน Environment นี้ ค่าที่ตั้งค่าในเบราว์เซอร์ และเมื่อนำไปอัปโหลดขึ้น GitHub)
+        const FALLBACK_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyATsHffYiLARGcs_F2SYCvZ2_I-7xMULWQ",
+            authDomain: "baansuan-cafe-pos.firebaseapp.com",
+            projectId: "baansuan-cafe-pos",
+            storageBucket: "baansuan-cafe-pos.firebasestorage.app",
+            messagingSenderId: "682402512495",
+            appId: "1:682402512495:web:09629d79b1a01cb135979a"
+        };
 
-                    onAuthStateChanged(auth, async (user) => {
-                        if (user) {
-                            currentUser = user;
-                            updateDbStatusBadge(true);
-                            await setupFirestoreListeners();
-                            startSilentBackgroundRefresh();
-                        }
-                    });
-                } catch (error) {
-                    console.error("Firebase Init Error:", error);
-                    updateDbStatusBadge(false, error.code || error.message);
-                    fallbackToLocalState();
+        function loadSavedFirebaseConfig() {
+            try {
+                const raw = window.name && window.name.startsWith('BAANSUAN_FB_CFG:')
+                    ? window.name.slice('BAANSUAN_FB_CFG:'.length)
+                    : '';
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed.apiKey) return parsed;
                 }
+            } catch (e) {}
+            return null;
+        }
+
+        function persistFirebaseConfigToSession(cfgObj) {
+            try {
+                window.name = cfgObj ? ('BAANSUAN_FB_CFG:' + JSON.stringify(cfgObj)) : '';
+            } catch (e) {}
+        }
+
+        function resolveFirebaseConfig() {
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                try {
+                    const parsed = JSON.parse(__firebase_config);
+                    if (parsed && parsed.apiKey) return parsed;
+                } catch (e) {
+                    console.warn("Invalid __firebase_config", e);
+                }
+            }
+            const saved = loadSavedFirebaseConfig();
+            if (saved && saved.apiKey) return saved;
+            if (FALLBACK_FIREBASE_CONFIG && FALLBACK_FIREBASE_CONFIG.apiKey) {
+                return FALLBACK_FIREBASE_CONFIG;
+            }
+            return null;
+        }
+
+        let firebaseConfig = resolveFirebaseConfig();
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'baansuan-cafe-pizza';
+
+        let app = null;
+        let auth = null;
+        let db = null;
+        let currentUser = null;
+
+        window.toggleFirebaseConfigBanner = function(show) {
+            const banner = document.getElementById('firebase-config-setup-banner');
+            const input = document.getElementById('firebase-config-json-input');
+            if (!banner) return;
+            if (show) {
+                if (input && firebaseConfig) {
+                    input.value = JSON.stringify(firebaseConfig, null, 2);
+                }
+                banner.classList.remove('hidden');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             } else {
+                banner.classList.add('hidden');
+            }
+        };
+
+        window.openFirebaseConfigModal = function() {
+            const banner = document.getElementById('firebase-config-setup-banner');
+            const isHidden = !banner || banner.classList.contains('hidden');
+            window.toggleFirebaseConfigBanner(isHidden);
+        };
+
+        // แปลงข้อความที่วาง (ทั้งรูปแบบ JSON หรือโค้ด const firebaseConfig = { ... }) ให้เป็น Object
+        function parseFlexibleFirebaseConfig(rawText) {
+            const cleaned = (rawText || '').trim();
+            if (!cleaned) return null;
+            try {
+                return JSON.parse(cleaned);
+            } catch (e) {
+                // รองรับกรณีผู้ใช้ก๊อปปี้โค้ด JS เช่น apiKey: "...", authDomain: "..."
+                const match = cleaned.match(/\{[\s\S]*\}/);
+                if (!match) return null;
+                const jsonLike = match[0]
+                    .replace(/\/\/[^\n]*/g, '')
+                    .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+                    .replace(/'/g, '"')
+                    .replace(/,\s*([}\]])/g, '$1');
+                return JSON.parse(jsonLike);
+            }
+        }
+
+        window.saveFirebaseConfigFromInput = async function() {
+            const input = document.getElementById('firebase-config-json-input');
+            const parsed = parseFlexibleFirebaseConfig(input ? input.value : '');
+            if (!parsed || !parsed.apiKey || !parsed.projectId) {
+                showToast("⚠️ รูปแบบ Firebase Config ไม่ถูกต้อง กรุณาตรวจสอบว่ามี apiKey และ projectId", "amber");
+                return;
+            }
+            firebaseConfig = parsed;
+            persistFirebaseConfigToSession(parsed);
+            showToast("🔄 กำลังเชื่อมต่อ Firebase และยืนยันตัวตนแบบ Anonymous...", "amber");
+            await connectToFirebase();
+        };
+
+        window.clearSavedFirebaseConfig = function() {
+            persistFirebaseConfigToSession(null);
+            firebaseConfig = resolveFirebaseConfig();
+            const input = document.getElementById('firebase-config-json-input');
+            if (input) input.value = '';
+            updateDbStatusBadge(false, "No Config");
+            fallbackToLocalState();
+            showToast("🗑️ ล้างค่า Firebase Config แล้ว", "stone");
+        };
+
+        async function connectToFirebase() {
+            if (!firebaseConfig || !firebaseConfig.apiKey) {
                 updateDbStatusBadge(false, "No Config");
+                fallbackToLocalState();
+                return;
+            }
+
+            try {
+                if (!app) {
+                    app = initializeApp(firebaseConfig);
+                }
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        currentUser = user;
+                        updateDbStatusBadge(true);
+                        window.toggleFirebaseConfigBanner(false);
+                        await setupFirestoreListeners();
+                        startSilentBackgroundRefresh();
+                    }
+                });
+            } catch (error) {
+                console.warn("Firebase Auth Warning (สลับสู่โหมดใช้งานในเครื่อง):", error.code || error.message);
+                const code = error && error.code ? error.code : (error && error.message ? error.message : 'Auth Error');
+                if (code.includes('auth/configuration-not-found') || code.includes('auth/operation-not-allowed') || code.includes('admin-restricted-operation')) {
+                    updateDbStatusBadge(false, "กรุณาเปิด Anonymous Sign-in ใน Firebase Console");
+                } else {
+                    updateDbStatusBadge(false, code);
+                }
                 fallbackToLocalState();
             }
         }
@@ -1186,7 +1344,8 @@
             if (isConnected) {
                 el.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> <span class="text-emerald-700 font-medium">เชื่อมต่อ Cloud สำเร็จ (รับออเดอร์ข้ามเครื่องได้)</span>`;
             } else {
-                el.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> <span class="text-red-600 font-medium">ออฟไลน์ (${errMsg}) — กรุณาเปิด Anonymous Auth ใน Firebase</span>`;
+                const detail = errMsg ? ` (${errMsg})` : '';
+                el.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> <span class="text-red-600 font-medium">ออฟไลน์${detail} — กรุณาตั้งค่า Config และเปิด Anonymous Auth ใน Firebase</span>`;
             }
         }
 
@@ -1261,7 +1420,7 @@
                 newOrders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
                 // แจ้งเตือนเสียง/ข้อความเมื่อมีออเดอร์ใหม่เด้งเข้ามา (เฉพาะเมื่ออยู่ในโหมดร้านค้า)
-                if (!isFirstOrderLoad && newOrders.length > orders.length && isMerchantAuthenticated) {
+                if (!isFirstOrderLoad && newOrders.length > orders.length && window.isMerchantAuthenticated) {
                     const latest = newOrders[0];
                     if (latest && latest.status === 'pending') {
                         playNotificationBeep();
@@ -1412,7 +1571,7 @@
             if (fallbackWakeInterval) return;
             // กระตุ้นเบราว์เซอร์เบาๆ ในพื้นหลังเพื่อป้องกันการพักหน้าจอในเบราว์เซอร์/iFrame ที่ไม่รองรับ WakeLock API
             fallbackWakeInterval = setInterval(() => {
-                if (!isMerchantAuthenticated || !isWakeLockDesired) return;
+                if (!window.isMerchantAuthenticated || !isWakeLockDesired) return;
                 try {
                     if (!fallbackAudioCtx) {
                         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1447,7 +1606,7 @@
         }
 
         async function requestMerchantWakeLock() {
-            if (!isMerchantAuthenticated || !isWakeLockDesired) return;
+            if (!window.isMerchantAuthenticated || !isWakeLockDesired) return;
 
             // อัปเดตสถานะปุ่มเป็นเปิดใช้งานทันที และเริ่มระบบป้องกันหน้าจอพักสำรองควบคู่ไปด้วย
             updateWakeLockUI(true);
@@ -1460,7 +1619,7 @@
                     screenWakeLock.addEventListener('release', () => {
                         screenWakeLock = null;
                         // หากผู้ใช้ยังต้องการเปิดจอค้างไว้ ให้คงสถานะเปิดผ่านระบบสำรองไว้เสมอ
-                        if (isMerchantAuthenticated && isWakeLockDesired) {
+                        if (window.isMerchantAuthenticated && isWakeLockDesired) {
                             updateWakeLockUI(true);
                         } else {
                             updateWakeLockUI(false);
@@ -1501,7 +1660,7 @@
 
         // ขอ Wake Lock ใหม่อัตโนมัติเมื่อสลับแท็บกลับมาที่หน้าร้านค้า
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && isMerchantAuthenticated && isWakeLockDesired) {
+            if (document.visibilityState === 'visible' && window.isMerchantAuthenticated && isWakeLockDesired) {
                 requestMerchantWakeLock();
             }
         });
@@ -1509,28 +1668,13 @@
         // ==========================================
         // ฟังก์ชันจัดการ UI และการสลับหน้าจอ (ป้องกันลูกค้าเข้าถึงฝั่งร้านค้า)
         // ==========================================
-        window.openMerchantAuthModal = function() {
-            if (isMerchantAuthenticated) {
-                switchMode('merchant');
-                return;
-            }
-            document.getElementById('merchant-pin-input').value = '';
-            document.getElementById('pin-error-msg').classList.add('hidden');
-            document.getElementById('merchant-pin-modal').classList.remove('hidden');
-            setTimeout(() => document.getElementById('merchant-pin-input').focus(), 100);
-        };
-
-        window.closeMerchantAuthModal = function() {
-            document.getElementById('merchant-pin-modal').classList.add('hidden');
-        };
-
         window.verifyMerchantPin = function(event) {
             event.preventDefault();
             const inputPin = document.getElementById('merchant-pin-input').value;
             if (inputPin === MERCHANT_PIN) {
-                isMerchantAuthenticated = true;
-                closeMerchantAuthModal();
-                switchMode('merchant');
+                window.isMerchantAuthenticated = true;
+                window.closeMerchantAuthModal();
+                window.switchMode('merchant');
                 showToast("🔓 เข้าสู่ระบบจัดการร้านค้าเรียบร้อย (เปิดจอค้างไว้กันหลับ)", "emerald");
             } else {
                 document.getElementById('pin-error-msg').classList.remove('hidden');
@@ -1540,9 +1684,9 @@
         };
 
         window.logoutMerchant = function() {
-            isMerchantAuthenticated = false;
+            window.isMerchantAuthenticated = false;
             releaseMerchantWakeLock();
-            switchMode('customer');
+            window.switchMode('customer');
             showToast("🔒 ออกจากระบบร้านค้าแล้ว", "stone");
         };
 
@@ -1556,7 +1700,7 @@
                 merchantView.classList.add('hidden');
                 merchantControls.classList.add('hidden');
                 updateFloatingCart();
-            } else if (mode === 'merchant' && isMerchantAuthenticated) {
+            } else if (mode === 'merchant' && window.isMerchantAuthenticated) {
                 customerView.classList.add('hidden');
                 merchantView.classList.remove('hidden');
                 merchantControls.classList.remove('hidden');
@@ -2070,6 +2214,52 @@
             }
         };
 
+        window.updateMenuName = async function(itemId, newName) {
+            const trimmedName = (newName || '').trim();
+            if (!trimmedName) {
+                showToast("⚠️ ชื่อเมนูต้องไม่เว้นว่าง", "amber");
+                renderMerchantMenu();
+                return;
+            }
+            const existing = menuItems.find(m => m.id === itemId);
+            if (existing && (existing.name || '').trim() === trimmedName) return;
+
+            try {
+                if (db && currentUser) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId), { name: trimmedName });
+                } else {
+                    if (existing) existing.name = trimmedName;
+                    renderCustomerMenu();
+                    renderMerchantMenu();
+                    renderDailySummary();
+                }
+                showToast("✏️ อัปเดตชื่อเมนูเรียบร้อยแล้ว", 'emerald');
+            } catch (err) {
+                console.error("Update menu name error:", err);
+                showToast("❌ ไม่สามารถแก้ไขชื่อเมนูได้", "red");
+            }
+        };
+
+        window.updateMenuDesc = async function(itemId, newDesc) {
+            const trimmedDesc = (newDesc || '').trim();
+            const existing = menuItems.find(m => m.id === itemId);
+            if (existing && (existing.desc || '').trim() === trimmedDesc) return;
+
+            try {
+                if (db && currentUser) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'menu_items', itemId), { desc: trimmedDesc });
+                } else {
+                    if (existing) existing.desc = trimmedDesc;
+                    renderCustomerMenu();
+                    renderMerchantMenu();
+                }
+                showToast("📝 อัปเดตคำอธิบายเมนูเรียบร้อยแล้ว", 'emerald');
+            } catch (err) {
+                console.error("Update menu desc error:", err);
+                showToast("❌ ไม่สามารถแก้ไขคำอธิบายได้", "red");
+            }
+        };
+
         // ฟังก์ชันแก้ไขรูปภาพของเมนูที่มีอยู่แล้ว
         let editingMenuImageId = null;
         let editingMenuNewImageBase64 = '';
@@ -2413,7 +2603,7 @@
 
             if (filteredMenus.length === 0) {
                 list.innerHTML = `<div class="text-center py-8 text-sm text-stone-400">ไม่พบรายการเมนูที่ค้นหา</div>`;
-                if (typeof lucide !== 'undefined') lucide.createIcons();
+                lucide.createIcons();
                 return;
             }
 
@@ -2422,17 +2612,19 @@
                 const cost = Number(item.cost || 0);
                 const profit = price - cost;
                 const currentSub = item.subCategory || 'กาแฟ';
+                const escapedName = (item.name || '').replace(/"/g, '&quot;');
+                const escapedDesc = (item.desc || '').replace(/"/g, '&quot;');
                 return `
                 <div class="p-4 rounded-2xl border border-stone-200 bg-stone-50/70 hover:bg-white hover:shadow-sm transition space-y-3">
                     <div class="flex items-start justify-between gap-3">
-                        <div class="flex items-center gap-3.5 min-w-0 flex-1">
-                            <div onclick="openEditMenuImageModal('${item.id}')" title="คลิกเพื่อเปลี่ยนรูปภาพเมนูนี้" class="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-stone-200 border border-stone-200/80 cursor-pointer group">
+                        <div class="flex items-start gap-3.5 min-w-0 flex-1">
+                            <div onclick="openEditMenuImageModal('${item.id}')" title="คลิกเพื่อเปลี่ยนรูปภาพเมนูนี้" class="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-stone-200 border border-stone-200/80 cursor-pointer group mt-0.5">
                                 <img src="${item.image}" class="w-full h-full object-cover group-hover:scale-105 transition">
                                 <div class="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white">
                                     <i data-lucide="camera" class="w-5 h-5"></i>
                                 </div>
                             </div>
-                            <div class="min-w-0 flex-1">
+                            <div class="min-w-0 flex-1 space-y-1.5">
                                 <div class="flex flex-wrap items-center gap-1.5">
                                     <span class="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-md ${item.category === 'pizza' ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-800'}">
                                         ${item.category === 'pizza' ? '🍕 พิซซ่า & ของทานเล่น' : '☕ เครื่องดื่ม & กาแฟ'}
@@ -2443,8 +2635,12 @@
                                         </select>
                                     ` : ''}
                                 </div>
-                                <h4 class="font-bold text-base text-stone-900 mt-1 break-words leading-snug">${item.name}</h4>
-                                ${item.desc ? `<p class="text-xs text-stone-500 mt-0.5 line-clamp-1">${item.desc}</p>` : ''}
+                                <div>
+                                    <input type="text" value="${escapedName}" onchange="updateMenuName('${item.id}', this.value)" placeholder="ชื่อรายการเมนู..." title="คลิกเพื่อแก้ไขชื่อรายการเมนู" class="w-full font-bold text-base text-stone-900 bg-white/80 hover:bg-white focus:bg-white px-2.5 py-1 rounded-lg border border-transparent hover:border-stone-300 focus:border-amber-600 focus:outline-none transition">
+                                </div>
+                                <div>
+                                    <input type="text" value="${escapedDesc}" onchange="updateMenuDesc('${item.id}', this.value)" placeholder="เพิ่มคำอธิบายเมนูสั้นๆ..." title="คลิกเพื่อแก้ไขคำอธิบายเมนู" class="w-full text-xs text-stone-600 bg-white/80 hover:bg-white focus:bg-white px-2.5 py-1 rounded-lg border border-transparent hover:border-stone-300 focus:border-amber-600 focus:outline-none transition">
+                                </div>
                             </div>
                         </div>
                         <div class="flex items-center gap-1.5 shrink-0">
